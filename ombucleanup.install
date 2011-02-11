@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * Implementation of hook_install()
+ */
+function ombucleanup_enable() {
+    variable_set('img_assist_views', array('ombu_img_assist_browser' => 'ombu_img_assist_browser'));
+}
+
+
+/**
+ * Set img assist view for existing sites
+ */
+function ombucleanup_update_6001() {
+    variable_set('img_assist_views', array('ombu_img_assist_browser' => 'ombu_img_assist_browser'));
+    return array();
+}
