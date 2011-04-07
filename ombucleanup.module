@@ -45,6 +45,24 @@ function ombucleanup_menu_alter(&$items) {
 
   unset($items['node/%node/track']);
   unset($items['user/%user/track/navigation']);
+
+  // Hide taxonomy menu tabs for all users except uid 1.
+  $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/edit']['access callback'] = 'ombucleanup_taxonomy_access';
+  $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/fields']['access callback'] = 'ombucleanup_taxonomy_access';
+  $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/display']['access callback'] = 'ombucleanup_taxonomy_access';
+}
+
+/**
+ * Access callback for taxonomy menu items.
+ * 
+ * Hide taxonomy menu tabs for all users except uid 1.
+ */
+function ombucleanup_taxonomy_access() {
+  global $user;
+  if ($user->uid == 1) {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
@@ -85,10 +103,10 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
 
   // Force automatic updating of path alias.
   if (module_exists('pathauto') && $form['path']['#access'] != FALSE) {
-    $form['path']['#pre_render'][] = 'ombucleanup_set_automatic_alias';
+    //$form['path']['#pre_render'][] = 'ombucleanup_set_automatic_alias';
     // @todo: it seems like this is always forced checked (see
     // ombucleanup_set_automatic_alias), so the description doesn't make sense.
-    $form['path']['#description'] = "Only uncheck the box if this content doesn't have a menu link defined above.";
+    //$form['path']['#description'] = "Only uncheck the box if this content doesn't have a menu link defined above.";
   }
 
   // Block Revisions, "Promote to front page" and "sticky" options
