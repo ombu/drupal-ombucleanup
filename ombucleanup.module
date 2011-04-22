@@ -132,7 +132,7 @@ function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
     case 'search_form':
       if ( $form['module']['#value'] == 'node' ) {
         // Hide advanced form elements on node search.
-        if ( $form['advanced'] ) {
+        if ( isset($form['advanced']) ) {
           $form['advanced']['#access'] = FALSE;
         }
       }
