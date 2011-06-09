@@ -14,6 +14,6 @@ Drupal.cleanupPaste = function(pl, o) {
                    console.debug('test');
             o.content = data;
             setTimeout("tinymce.EditorManager.execInstanceCommand('"+pl.editor.id+"', 'mceAutoResize')", 500);
-        },
+        }
     });
 }
