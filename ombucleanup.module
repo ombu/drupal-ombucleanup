@@ -54,7 +54,7 @@ function ombucleanup_menu_alter(&$items) {
 
 /**
  * Access callback for taxonomy menu items.
- * 
+ *
  * Hide taxonomy menu tabs for all users except uid 1.
  */
 function ombucleanup_taxonomy_access() {
@@ -116,6 +116,14 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
 
   // Remove the 'Preview' button
   $form['actions']['preview']['#access'] = FALSE;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ombucleanup_form_user_profile_form_alter(&$form, $form_state) {
+  // Hide Admin overlay setting.
+  $form['overlay_control']['#access'] = FALSE;
 }
 
 /**
