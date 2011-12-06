@@ -211,3 +211,44 @@ function ombucleanup_cleanup_paste() {
   echo $cleaned_text;
   exit;
 }
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ombucleanup_form_bean_form_alter(&$form, $form_state) {
+  // Hide the label, fill with a value if needed so form validates.
+  $form['label']['#access'] = FALSE;
+  if (!$form['label']['#default_value']) {
+    $form['label']['#default_value'] = 'ombucleanup-tempkey';
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function ombucleanup_entity_presave($entity, $type) {
+  // For bean entities, generate a label.
+  if ($type == 'bean') {
+    if ($entity->label == 'ombucleanup-tempkey') {
+      // Default to use title as label, otherwise use bean type.
+      $entity->label = $entity->title ? $entity->title : $entity->type;
+
+      // Check if label is in use, borrowed from Bean:save().
+      $max_length = 32;
+      // Base it on the label and make sure it isn't too long for the database
+      $entity->delta = drupal_clean_css_identifier(strtolower($entity->label));
+      $entity->delta = substr($entity->delta, 0, $max_length);
+
+      // Check if delta is unique
+      if (bean_load_delta($entity->delta)) {
+        $i = 0;
+        $separator = '-';
+        $original_delta = $entity->delta;
+        do {
+          $unique_suffix = $separator . $i++;
+          $entity->delta = substr($original_delta, 0, $max_length - drupal_strlen($unique_suffix)) . $unique_suffix;
+        } while (bean_load_delta($entity->delta));
+      }
+    }
+  }
+}
