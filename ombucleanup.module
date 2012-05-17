@@ -50,6 +50,11 @@ function ombucleanup_menu_alter(&$items) {
   $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/edit']['access callback'] = 'ombucleanup_taxonomy_access';
   $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/fields']['access callback'] = 'ombucleanup_taxonomy_access';
   $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/display']['access callback'] = 'ombucleanup_taxonomy_access';
+
+  // Remove the 'Configure Block' contextual link.
+  if (isset($items['admin/structure/block/manage/%/%/configure'])) {
+    unset($items['admin/structure/block/manage/%/%/configure']);
+  }
 }
 
 /**
