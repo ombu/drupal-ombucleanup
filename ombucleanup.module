@@ -252,3 +252,34 @@ function ombucleanup_entity_presave($entity, $type) {
     }
   }
 }
+
+/**
+ * HTML Purifier Filter format.
+ */
+
+/**
+ * Implements hook_filter_info().
+ */
+function ombucleanup_filter_info() {
+  $filters['cleanup_html'] = array(
+    'title' => t('Cleanup HTML'),
+    'description' => t('Cleans up HTML using HTML Purifier'),
+    'process callback' => 'ombucleanup_filter_cleanup_html_process',
+    'settings callback' => 'ombucleanup_filter_cleanup_html_settings',
+    'default settings' => array(
+      'allowed_html' => '<a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd>',
+    ),
+  );
+}
+
+/**
+ * Process callback for cleanup_html filter.
+ */
+function ombucleanup_filter_cleanup_html_process($text, $filter, $format, $langcode, $cache, $cache_id) {
+  module_load_include('inc', 'ombucleanup', 'htmlpurifier/htmlpurifier');
+  _ombucleanup_htmlpurifier_load();
+  $config = HTMLPurifier_Config::createDefault();
+  $config->set('Attr.AllowedClasses', 'p,strong,b,em,i,ul,ol,li,h2,h3,h4,br');
+  $purifier = new HTMLPurifier($config);
+  $cleaned_text = $purifier->purify($text);
+}
