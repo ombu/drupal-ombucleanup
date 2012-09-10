@@ -41,7 +41,13 @@ function ombucleanup_menu() {
  * Implements hook_menu_alter().
  */
 function ombucleanup_menu_alter(&$items) {
-  $items['user']['title'] = 'Log into ' . variable_get('site_name', 'this site');
+  // $items['user']['title'] = 'Log into ' . variable_get('site_name', 'this site');
+
+  // Fix titles for user subpaths.
+  $items['user/password']['title callback'] = 't';
+  unset($items['user/password']['type']);
+  $items['user/register']['title callback'] = 't';
+  unset($items['user/register']['type']);
 
   unset($items['node/%node/track']);
   unset($items['user/%user/track/navigation']);
