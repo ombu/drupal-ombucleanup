@@ -286,3 +286,28 @@ function ombucleanup_workbench_access_user_alter(&$access, $account) {
     }
   }
 }
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function ombucleanup_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'library_alter') {
+    // Move jquery update to the end. This will make sure our hook_library_alter
+    // is always called before the jquery_update.
+    $jquery_update = $implementations['jquery_update'];
+    unset($implementations['jquery_update']);
+    $implementations['jquery_update'] = $jquery_update;
+  }
+}
+
+/**
+ * Implements hook_library_alter().
+ */
+function ombucleanup_library_alter(&$libraries, $module) {
+  // If it is an admin path all we want to do is change the global $conf
+  // variable so when jquery_update runs right after us it will use 1.5.
+  if (path_is_admin(current_path())) {
+    global $conf;
+    $conf['jquery_update_jquery_version'] = '1.5';
+  }
+}
