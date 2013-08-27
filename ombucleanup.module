@@ -61,6 +61,11 @@ function ombucleanup_menu_alter(&$items) {
   if (isset($items['admin/structure/block/manage/%/%/configure'])) {
     unset($items['admin/structure/block/manage/%/%/configure']);
   }
+
+  // Remove personal contact forms.
+  if (module_exists('contact')) {
+    $items['user/%user/contact']['access callback'] = FALSE;
+  }
 }
 
 /**
@@ -151,6 +156,13 @@ function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
         if ( isset($form['advanced']) ) {
           $form['advanced']['#access'] = FALSE;
         }
+      }
+      break;
+
+    case 'user_profile_form':
+    case 'user_admin_settings':
+      if (isset($form['contact'])) {
+        $form['contact']['#access'] = FALSE;
       }
       break;
   }
