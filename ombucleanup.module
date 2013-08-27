@@ -322,3 +322,30 @@ function ombucleanup_library_alter(&$libraries, $module) {
     $conf['jquery_update_jquery_version'] = '1.5';
   }
 }
+
+/**
+ * Implements hook_media_token_to_markup_alter().
+ *
+ * Change height/width to max-* and add classes for positioning.
+ */
+function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings) {
+  if ($element['content']['file']['#theme'] == 'image') {
+    $content =& $element['content']['file'];
+
+    $classes = $content['#attributes']['class'];
+    if (preg_match('/float: (\w*);/', $content['#attributes']['style'], $matches)) {
+      $classes[] = $matches[1];
+    }
+
+    $style = 'max-width: ' . $content['#attributes']['width'] . '; ';
+    $style .= 'max-height: ' . $content['#attributes']['height'] . ';';
+
+    $content['#attributes'] = array(
+      'style' => $style,
+      'class' => $classes,
+    );
+
+    unset($content['#width']);
+    unset($content['#height']);
+  }
+}
