@@ -145,7 +145,7 @@ function ombucleanup_form_user_profile_form_alter(&$form, $form_state) {
 function ombucleanup_form_menu_edit_item_alter(&$form, $form_state) {
   // If special_menu_items is enabled, add extra help text to description.
   if (module_exists('special_menu_items')) {
-    $form['link_title']['#description'] .= t('  If creating a seprator menu item (using <em>&lt;seperator&gt;</em> as the path), it is recommended to use <em>"&lt;seperator&gt;"</em> as the title.');
+    $form['link_title']['#description'] .= t('  If creating a seprator menu item (using <em>&lt;separator&gt;</em> as the path), it is recommended to use <em>"&lt;separator&gt;"</em> as the title.');
   }
 }
 
