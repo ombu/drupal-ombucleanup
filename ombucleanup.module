@@ -253,6 +253,14 @@ function ombucleanup_form_bean_form_alter(&$form, $form_state) {
   if (!$form['label']['#default_value']) {
     $form['label']['#default_value'] = 'ombucleanup-tempkey';
   }
+
+  // Hide revision info.
+  $form['revision']['#access'] = FALSE;
+
+  // Hide redirects, if module exists.
+  if (module_exists('redirect')) {
+    $form['redirect']['#access'] = FALSE;
+  }
 }
 
 /**
