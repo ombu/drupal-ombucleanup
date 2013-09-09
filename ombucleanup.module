@@ -117,6 +117,9 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
     $form['menu']['link']['weight']['#access'] = FALSE;
   }
 
+  // Hide preview button.
+  $form['actions']['preview']['#access'] = FALSE;
+
   // Force automatic updating of path alias.
   if (module_exists('pathauto') && $form['path']['#access'] != FALSE) {
     //$form['path']['#pre_render'][] = 'ombucleanup_set_automatic_alias';
