@@ -1,18 +1,9 @@
 <?php
-// $Id$
 
 /**
  * @file
- *
  * Provides general Drupal modification for OMBU sites.
  */
-
-/**
- * Implements hook_init().
- */
-function ombucleanup_init() {
-  drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/ombucleanup.js');
-}
 
 /**
  * Implements hook_permission().
@@ -41,8 +32,6 @@ function ombucleanup_menu() {
  * Implements hook_menu_alter().
  */
 function ombucleanup_menu_alter(&$items) {
-  // $items['user']['title'] = 'Log into ' . variable_get('site_name', 'this site');
-
   // Fix titles for user subpaths.
   $items['user/password']['title callback'] = 't';
   unset($items['user/password']['type']);
@@ -85,50 +74,15 @@ function ombucleanup_taxonomy_access() {
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function ombucleanup_form_node_form_alter(&$form, &$form_state) {
-  /* --- Node settings --- */
-
-  /**
-   * Hiding the menu and only showing specific menus is done via the content
-   * type settings, specifically the menu_options_$node_type variable.  You can
-   * hide the menu form by settings that variable to an empty array.
-   */
-  $s = array(
-    // Ex:
-    // 'partner' => array(
-    //    'hide' => array('revision_information', 'author', 'xmlsitemap', 'path', 'attachments', 'field_weight'),
-    //    'redirect' => 'admin/dashboard/manage-content/partners',
-    // ),
-  );
-
-  // Hide these elements from all node forms
-  if (isset($s[$form['type']['#value']]) && isset($s[$form['type']['#value']]['hide'])) {
-    foreach ($s[$form['type']['#value']]['hide'] as $h) {
-      _ombucleanup_hide($form, $h);
-    }
-  }
-
-  // Set redirect
-  if (isset($s[$form['type']['#value']]) && isset($s[$form['type']['#value']]['redirect'])) {
-    $form_state['#redirect'] = $s[$form['type']['#value']]['redirect'];
-  }
-
-  // Hide menu weight
-  if ( isset($form['menu']) && $form['menu']['#access'] != FALSE) {
+  // Hide menu weight.
+  if (isset($form['menu']) && $form['menu']['#access'] != FALSE) {
     $form['menu']['link']['weight']['#access'] = FALSE;
   }
 
   // Hide preview button.
   $form['actions']['preview']['#access'] = FALSE;
 
-  // Force automatic updating of path alias.
-  if (module_exists('pathauto') && $form['path']['#access'] != FALSE) {
-    //$form['path']['#pre_render'][] = 'ombucleanup_set_automatic_alias';
-    // @todo: it seems like this is always forced checked (see
-    // ombucleanup_set_automatic_alias), so the description doesn't make sense.
-    //$form['path']['#description'] = "Only uncheck the box if this content doesn't have a menu link defined above.";
-  }
-
-  // Block Revisions, "Promote to front page" and "sticky" options
+  // Block Revisions, "Promote to front page" and "sticky" options.
   $form['revision_information']['#access'] = FALSE;
   $form['options']['promote']['#access'] = FALSE;
   $form['options']['sticky']['#access'] = FALSE;
@@ -164,9 +118,9 @@ function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
       break;
 
     case 'search_form':
-      if ( $form['module']['#value'] == 'node' ) {
+      if ($form['module']['#value'] == 'node') {
         // Hide advanced form elements on node search.
-        if ( isset($form['advanced']) ) {
+        if (isset($form['advanced'])) {
           $form['advanced']['#access'] = FALSE;
         }
       }
@@ -185,65 +139,54 @@ function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
  * Implements hook_wysiwyg_editor_settings_alter().
  */
 function ombucleanup_wysiwyg_editor_settings_alter(&$settings, &$context) {
-  if ($context['profile']->editor == 'tinymce') {
-    if (user_access('use tinymce html button')) {
-      $settings['theme_advanced_buttons1'] .= ',code';
-    }
-
-    // Cleanup paste with HTMLPurifier
-    $settings['paste_preprocess'] = 'Drupal.cleanupPaste';
-    $settings['plugins'] .= ',paste';
-    $settings['paste_auto_cleanup_on_paste'] = 1;
-
-    // Trigger content class in TinyMCE
+  if ($context['profile']->editor == 'ckeditor') {
+    // Trigger content class.
     $settings['body_class'] = 'c';
+
+    // Remove paste plugins in favor of ombucleanup.
+    $settings['entities'] = 'false';
   }
 }
 
 /**
- * Hide a specific form element for all users other than the superuser.
+ * Implements hook_wysiwyg_plugin().
  */
-function _ombucleanup_hide(&$form, $elem) {
-
-  if (!$form[$elem]) {
-    return FALSE;
-  }
-
-  global $user;
-
-  // Only block access if user isn't superuser
-  if ( $user->uid != 1 ) {
-    $form[$elem]['#access'] = FALSE;
-    return TRUE;
-  }
-  else {
-    return TRUE;
+function ombucleanup_wysiwyg_plugin($editor, $version) {
+  if ($editor == 'ckeditor') {
+    return array(
+      'ombucleanup' => array(
+        'path' => drupal_get_path('module', 'ombucleanup') . '/js',
+        'file' => 'plugin.js',
+        'extensions' => array(
+          'ombucleanup' => t('OMBU Cleanup'),
+        ),
+        'load' => TRUE,
+      ),
+    );
   }
 }
 
 /**
- * Force updating of pathauto alias.
- */
-function ombucleanup_set_automatic_alias(&$element) {
-  $element['pathauto_perform_alias']['#value'] = TRUE;
-  return $element;
-}
-
-/**
- * Menu Callback to clean up TinyMCE paste
+ * Menu Callback to clean up CKEditor paste.
  */
 function ombucleanup_cleanup_paste() {
-  $text = $_REQUEST['text'];
+  $output = array();
 
-  module_load_include('inc', 'ombucleanup', 'htmlpurifier/htmlpurifier');
-  _ombucleanup_htmlpurifier_load();
-  $config = _ombucleanup_htmlpurifier_get_config(NULL);
-  // @todo: pull in the tags allowed in ombu_input
-  $config->set('HTML.Allowed', 'p,strong,b,em,i,ul,ol,li,h2,h3,h4,br');
-  $purifier = new HTMLPurifier($config);
-  $cleaned_text = $purifier->purify($text);
+  $format = 'default'; // $_POST['format'];
 
-  echo $cleaned_text;
+  if (user_access(filter_permission_name($format))) {
+    $html = $_POST['html'];
+
+    // There's an apparent bug in CKEditor where all HTML entities are encoded
+    // on paste.  Convert decoded HTML entities before processing.
+    $html = html_entity_decode($html);
+
+    $output = array(
+      'text' => check_markup($html, $format),
+    );
+  }
+
+  drupal_json_output($output);
   exit;
 }
 
@@ -278,11 +221,11 @@ function ombucleanup_entity_presave($entity, $type) {
 
       // Check if label is in use, borrowed from Bean:save().
       $max_length = 32;
-      // Base it on the label and make sure it isn't too long for the database
+      // Base it on the label and make sure it isn't too long for the database.
       $entity->delta = drupal_clean_css_identifier(strtolower($entity->label));
       $entity->delta = substr($entity->delta, 0, $max_length);
 
-      // Check if delta is unique
+      // Check if delta is unique.
       if (bean_load_delta($entity->delta)) {
         $i = 0;
         $separator = '-';
@@ -292,29 +235,6 @@ function ombucleanup_entity_presave($entity, $type) {
           $entity->delta = substr($original_delta, 0, $max_length - drupal_strlen($unique_suffix)) . $unique_suffix;
         } while (bean_load_delta($entity->delta));
       }
-    }
-  }
-}
-
-/**
- * Implements hook_workbench_access_user().
- *
- * Alter user access to grant all access to users with bypass node access
- * permission, in order for the sections to show up on the forms.
- */
-function ombucleanup_workbench_access_user_alter(&$access, $account) {
-  if (user_access('bypass node access', $account)) {
-    $result = db_query("SELECT access_id FROM {workbench_access}");
-    foreach ($result as $item) {
-      $access[$item->access_id] = array(
-        'view' => array('all'),
-        'create' => array('all'),
-        'update' => array('all'),
-        'delete' => array('all'),
-        'preview' => array('all'),
-        'revise' => array('all'),
-        'publish' => array('all'),
-      );
     }
   }
 }
