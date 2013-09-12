@@ -174,7 +174,7 @@ function ombucleanup_cleanup_paste() {
 
   $format = 'default'; // $_POST['format'];
 
-  if (user_access(filter_permission_name($format))) {
+  if (user_access('use text format ' . $format)) {
     $html = $_POST['html'];
 
     // There's an apparent bug in CKEditor where all HTML entities are encoded
