@@ -55,6 +55,9 @@ function ombucleanup_menu_alter(&$items) {
   if (module_exists('contact')) {
     $items['user/%user/contact']['access callback'] = FALSE;
   }
+
+  // Disable view screen for beans.
+  $items['block/%bean_delta/view']['access callback'] = FALSE;
 }
 
 /**
