@@ -279,8 +279,8 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
 
     $classes = $content['#attributes']['class'];
 
-    if (isset($content['#attributes']['style']) && preg_match('/float: (\w*);/', $content['#attributes']['style'], $matches)) {
-      $classes[] = $matches[1];
+    if (isset($content['#attributes']['style']) && preg_match('/float: ?(\w*);/', $content['#attributes']['style'], $matches)) {
+      $classes[] = $matches[1] == 'left' ? 'pull-left' : 'pull-right';
     }
 
     if (isset($content['#attributes']['width']) && isset($content['#attributes']['height'])) {
