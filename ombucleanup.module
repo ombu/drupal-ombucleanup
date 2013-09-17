@@ -276,7 +276,7 @@ function ombucleanup_library_alter(&$libraries, $module) {
  * Change height/width to max-* and add classes for positioning.
  */
 function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings) {
-  if (isset($element['content']['file']) && $element['content']['file']['#theme'] == 'image') {
+  if (isset($element['content']['file']) && in_array($element['content']['file']['#theme'], array('image', 'image_formatter'))) {
     $style = '';
     $content =& $element['content']['file'];
 
@@ -298,6 +298,10 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
 
     unset($content['#width']);
     unset($content['#height']);
+
+    if ($content['#theme'] == 'image_formatter') {
+      $content['#item']['attributes'] = $content['#attributes'];
+    }
   }
 }
 
