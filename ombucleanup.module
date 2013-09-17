@@ -148,6 +148,9 @@ function ombucleanup_wysiwyg_editor_settings_alter(&$settings, &$context) {
 
     // Remove paste plugins in favor of ombucleanup.
     $settings['entities'] = 'false';
+
+    // Allow all content in wysiwyg.
+    $settings['allowedContent'] = TRUE;
   }
 }
 
