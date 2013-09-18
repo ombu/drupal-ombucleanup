@@ -311,8 +311,10 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
 function ombucleanup_page_alter(&$page) {
   // Add js to open links in new windows.
   if (variable_get('external_new_window', 1)) {
-    drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/external-links.js');
+    drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.external-links.js');
   }
+  // Add js to disable submit buttons during ajax requests.
+  drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.disable-ajax.js', array('weight' => 100));
 }
 
 /**
