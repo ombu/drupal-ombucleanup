@@ -286,7 +286,11 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
       $classes[] = $matches[1] == 'left' ? 'pull-left' : 'pull-right';
     }
 
-    if (isset($content['#attributes']['width']) && isset($content['#attributes']['height'])) {
+    if (isset($content['#attributes']['style']) && preg_match('/width: ?(\d*)px; height: ?(\d*)px;/', $content['#attributes']['style'], $matches)) {
+      $style .= 'max-width: ' . $matches[1] . 'px; ';
+      $style .= 'max-height: ' . $matches[2] . 'px;';
+    }
+    elseif (isset($content['#attributes']['width']) && isset($content['#attributes']['height'])) {
       $style .= 'max-width: ' . $content['#attributes']['width'] . 'px; ';
       $style .= 'max-height: ' . $content['#attributes']['height'] . 'px;';
     }
