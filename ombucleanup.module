@@ -89,6 +89,9 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
   $form['revision_information']['#access'] = FALSE;
   $form['options']['promote']['#access'] = FALSE;
   $form['options']['sticky']['#access'] = FALSE;
+
+  // Don't check pathauto by default.
+  $form['path']['pathauto']['#default_value'] = FALSE;
 }
 
 /**
