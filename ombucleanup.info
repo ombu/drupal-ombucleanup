@@ -1,10 +1,10 @@
-; $Id$
 name = "OMBU Cleanup"
 description = "Provides general Drupal modifications on OMBU sites"
 package = 'OMBU'
 core = 7.x
 php = 5.1
+version = 7.x-0.2
+
 
 files[] = ombucleanup.install
 files[] = ombucleanup.module
-files[] = htmlpurifier/htmlpurifier.inc
