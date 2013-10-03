@@ -339,3 +339,13 @@ function ombucleanup_siteconfig($op, $form) {
     return $form;
   }
 }
+
+/**
+ * Implements hook_oembed_response_alter().
+ *
+ * Alter oembed response so thumbnails are more reasonably sized.
+ */
+function ombucleanup_oembed_response_alter(&$embed) {
+  $embed['thumbnail_width'] = 100;
+}
+
