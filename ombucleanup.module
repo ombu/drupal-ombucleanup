@@ -120,7 +120,6 @@ function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
 
     case 'search_block_form':
       unset($form['search_block_form']['#title']);
-      $form['search_block_form']['#default_value'] = 'Search';
       break;
 
     case 'search_form':
