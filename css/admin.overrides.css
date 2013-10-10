@@ -1,0 +1,9 @@
+#autocomplete li {
+  margin-bottom: 0;
+  padding: 0;
+}
+#autocomplete li > div,
+#autocomplete li > a {
+  display: block;
+  padding: 0.25em 0.5em;
+}

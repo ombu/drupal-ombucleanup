@@ -333,6 +333,9 @@ function ombucleanup_page_alter(&$page) {
   }
   // Add js to disable submit buttons during ajax requests.
   drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.disable-ajax.js', array('weight' => 100));
+
+  // Add CSS to override admin UI styles
+  drupal_add_css(drupal_get_path('module', 'ombucleanup') . '/css/admin.overrides.css');
 }
 
 /**
