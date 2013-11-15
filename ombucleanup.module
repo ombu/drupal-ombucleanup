@@ -91,7 +91,9 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
   $form['options']['sticky']['#access'] = FALSE;
 
   // Don't check pathauto by default.
-  $form['path']['pathauto']['#default_value'] = FALSE;
+  if (!empty($form['nid']['#value'])) {
+    $form['path']['pathauto']['#default_value'] = FALSE;
+  }
 }
 
 /**
