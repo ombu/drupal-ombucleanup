@@ -38,7 +38,7 @@
       });
 
       // Apply the target attribute to all links.
-      $(external_links).attr('target', '__blank');
+      $(external_links).attr('target', '_blank');
     }
   };
 
