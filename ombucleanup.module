@@ -300,7 +300,13 @@ function ombucleanup_library_alter(&$libraries, $module) {
   // variable so when jquery_update runs right after us it will use 1.5.
   if (path_is_admin(current_path()) && module_exists('jquery_update')) {
     global $conf;
-    $conf['jquery_update_jquery_version'] = '1.5';
+    $version = variable_get('jquery_admin_version', '1.5');
+    $conf['jquery_update_jquery_version'] = $version;
+
+    // Remove patch to jquery ui dialog from views.
+    if (version_compare($version, '1.5', '>=')) {
+      unset($libraries['ui.dialog']['js'][drupal_get_path('module', 'views') . '/js/jquery.ui.dialog.patch.js']);
+    }
   }
 }
 
