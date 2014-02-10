@@ -277,7 +277,8 @@ function ombucleanup_library_alter(&$libraries, $module) {
   // variable so when jquery_update runs right after us it will use 1.5.
   // Unfortunately, this also breaks the wysiwyg in overlay when caching is
   // enabled, since parent page is also caught, so only run in overlay context.
-  if (path_is_admin(current_path()) && module_exists('jquery_update') && overlay_get_mode()) {
+  if (path_is_admin(current_path()) && module_exists('jquery_update')
+    && function_exists('overlay_get_mode') && overlay_get_mode()) {
     global $conf;
     $conf['jquery_update_jquery_version'] = '1.5';
   }
