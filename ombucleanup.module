@@ -120,7 +120,7 @@ function ombucleanup_form_menu_edit_item_alter(&$form, $form_state) {
  * Clean up media embed help text.
  */
 function ombucleanup_form_media_internet_add_alter(&$form, $form_state) {
-  $form['embed_code']['#title'] = t('Enter an image URL or a YouTube share link');
+  $form['embed_code']['#title'] = variable_get('media_embed_help', 'Enter an image URL or a YouTube share link');
   $form['embed_code']['#description'] = '';
   $form['providers']['#access'] = FALSE;
 }
