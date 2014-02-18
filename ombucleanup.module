@@ -251,6 +251,32 @@ function ombucleanup_field_widget_form_alter(&$element, &$form_state, $context) 
 }
 
 /**
+ * Implements hook_element_info_alter().
+ *
+ * Add process function to select elements to remove empty value if chosen is
+ * enabled.
+ */
+function ombucleanup_element_info_alter(&$type) {
+  if (module_exists('chosen')) {
+    $type['select']['#process'][] = 'ombucleanup_select_process';
+  }
+}
+
+/**
+ * Process select elements to remove empty value.
+ *
+ * This is needed when the chosen module is enabled in order to prevent empty
+ * options being selected in the chosen UI.
+ */
+function ombucleanup_select_process($element) {
+  if (!$element['#required'] && $element['#multiple']) {
+    $element['#options'][''] = '';
+  }
+
+  return $element;
+}
+
+/**
  * Implements hook_entity_presave().
  */
 function ombucleanup_entity_presave($entity, $type) {
