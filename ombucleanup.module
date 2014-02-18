@@ -237,12 +237,13 @@ function ombucleanup_form_bean_form_alter(&$form, $form_state) {
  */
 function ombucleanup_field_widget_form_alter(&$element, &$form_state, $context) {
   $type = $context['instance']['widget']['type'];
-  if (module_exists('chosen_ajax') && strstr($type, 'autocomplete')) {
+  if (module_exists('chosen_ajax') && strstr($type, 'autocomplete') && $type != 'taxonomy_autocomplete') {
     foreach($element as $delta => $item) {
       $element[$delta]['#chosen_ajax'] = array(
         'options' => array(
           'placeholder_text' => t('Choose an option'),
           'width' => '100%',
+          'allow_single_deselect' => TRUE,
         ),
       );
     }
