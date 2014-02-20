@@ -269,7 +269,7 @@ function ombucleanup_element_info_alter(&$type) {
  * options being selected in the chosen UI.
  */
 function ombucleanup_select_process($element) {
-  if (!$element['#required'] && $element['#multiple']) {
+  if (!$element['#required'] && $element['#multiple'] && isset($element['#options'][''])) {
     $element['#options'][''] = '';
   }
 
