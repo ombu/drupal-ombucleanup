@@ -380,8 +380,8 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
  * Implements hook_page_alter().
  */
 function ombucleanup_page_alter(&$page) {
-  // Add js to open links in new windows.
-  if (variable_get('external_new_window', 1)) {
+  // Add js to open links in new windows, only on the front end.
+  if (variable_get('external_new_window', 1) && path_is_admin(current_path())) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.external-links.js');
   }
   // Add js to disable submit buttons during ajax requests.
