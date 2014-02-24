@@ -323,17 +323,10 @@ function ombucleanup_module_implements_alter(&$implementations, $hook) {
  * Implements hook_library_alter().
  */
 function ombucleanup_library_alter(&$libraries, $module) {
-  // If it is an admin path all we want to do is change the global $conf
-  // variable so when jquery_update runs right after us it will use 1.5.
-  if (path_is_admin(current_path()) && module_exists('jquery_update')) {
-    global $conf;
-    $version = variable_get('jquery_admin_version', '1.5');
-    $conf['jquery_update_jquery_version'] = $version;
-
-    // Remove patch to jquery ui dialog from views.
-    if (version_compare($version, '1.5', '>=')) {
-      unset($libraries['ui.dialog']['js'][drupal_get_path('module', 'views') . '/js/jquery.ui.dialog.patch.js']);
-    }
+  // Remove patches jquery ui dialog from views, since we're using a current
+  // version.
+  if (isset($libraries['ui.dialog']['js'][drupal_get_path('module', 'views') . '/js/jquery.ui.dialog.patch.js'])) {
+    unset($libraries['ui.dialog']['js'][drupal_get_path('module', 'views') . '/js/jquery.ui.dialog.patch.js']);
   }
 }
 
