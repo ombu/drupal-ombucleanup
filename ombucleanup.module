@@ -286,22 +286,19 @@ function ombucleanup_entity_presave($entity, $type) {
       // Default to use title as label, otherwise use bean type.
       $entity->label = $entity->title ? $entity->title : $entity->type;
 
-      // Check if label is in use, borrowed from Bean:save().
-      $max_length = 32;
-      // Base it on the label and make sure it isn't too long for the database.
+      // Create a truly unique delta for new beans. Bean::add() has the
+      // possibility of generating deltas that existed in beans that have been
+      // previously deleted. This causes problems, especially when a bean has
+      // been deleted but not removed from other systems (e.g. context), causing
+      // the bean to show up in unintended places.
       $entity->delta = drupal_clean_css_identifier(strtolower($entity->label));
-      $entity->delta = substr($entity->delta, 0, $max_length);
 
-      // Check if delta is unique.
-      if (bean_load_delta($entity->delta)) {
-        $i = 0;
-        $separator = '-';
-        $original_delta = $entity->delta;
-        do {
-          $unique_suffix = $separator . $i++;
-          $entity->delta = substr($original_delta, 0, $max_length - drupal_strlen($unique_suffix)) . $unique_suffix;
-        } while (bean_load_delta($entity->delta));
-      }
+      // Make sure it isn't too long for the database.
+      $max_length = 32;
+      $identifier = '-' . db_next_id();
+      $max_length -= strlen($identifier);
+      $entity->delta = substr($entity->delta, 0, $max_length);
+      $entity->delta .= $identifier;
     }
   }
 }
@@ -378,7 +375,12 @@ function ombucleanup_page_alter(&$page) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.external-links.js');
   }
   // Add js to disable submit buttons during ajax requests.
-  drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.disable-ajax.js', array('weight' => 100));
+  if (current_path() != 'media/browser') {
+    drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.disable-ajax.js', array('weight' => 100));
+  }
+
+  // Add CSS to override admin UI styles
+  drupal_add_css(drupal_get_path('module', 'ombucleanup') . '/css/admin.overrides.css');
 }
 
 /**
