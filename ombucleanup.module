@@ -243,20 +243,6 @@ function ombucleanup_element_info_alter(&$type) {
 }
 
 /**
- * Process select elements to remove empty value.
- *
- * This is needed when the chosen module is enabled in order to prevent empty
- * options being selected in the chosen UI.
- */
-function ombucleanup_select_process($element) {
-  if (!$element['#required'] && $element['#multiple'] && isset($element['#options'][''])) {
-    $element['#options'][''] = '';
-  }
-
-  return $element;
-}
-
-/**
  * Implements hook_entity_presave().
  */
 function ombucleanup_entity_presave($entity, $type) {
