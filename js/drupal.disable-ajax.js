@@ -12,7 +12,7 @@
 
   Drupal.behaviors.OmbuCleanupEnableSubmit = {
     attach: function(context, settings) {
-      $('input[type=submit]').removeAttr('disabled').fadeTo(200, 1);
+      $('input[type=submit]:visible').removeAttr('disabled').fadeTo(200, 1);
     }
   };
 
