@@ -374,3 +374,13 @@ function ombucleanup_oembed_response_alter(&$embed) {
   $embed['thumbnail_width'] = 100;
 }
 
+/**
+ * Implements hook_node_view_alter().
+ *
+ * Remove contextual links for nodes.
+ */
+function ombucleanup_node_view_alter(&$build) {
+  if (variable_get('hide_node_contextual_links', TRUE)) {
+    unset($build['#contextual_links']['node']);
+  }
+}
