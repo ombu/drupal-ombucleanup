@@ -19,7 +19,7 @@
   Drupal.OmbuCleanupAjax = {};
 
   Drupal.OmbuCleanupAjax.beforeSubmit = function (form_values, form, options) {
-    $('input[type=submit]', form).attr('disabled', 'disabled').fadeTo(200, .20);
+    $('input[type=submit]:visible', form).attr('disabled', 'disabled').fadeTo(200, .20);
   }
 
 })(jQuery);
