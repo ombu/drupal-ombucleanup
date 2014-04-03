@@ -24,7 +24,7 @@
       var external_links = new Array();
       $("a", context).each(function(el) {
         try {
-          var url = this.href.toLowerCase();
+          var url = $(this).attr('href').toLowerCase();
           if (url.indexOf('http') == 0 && (!url.match(internal_link))) {
               external_links.push(this);
           }
@@ -38,7 +38,7 @@
       });
 
       // Apply the target attribute to all links.
-      $(external_links).attr('target', '__blank');
+      $(external_links).attr('target', '_blank');
     }
   };
 

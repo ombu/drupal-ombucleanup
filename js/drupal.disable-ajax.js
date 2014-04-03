@@ -12,14 +12,14 @@
 
   Drupal.behaviors.OmbuCleanupEnableSubmit = {
     attach: function(context, settings) {
-      $('input[type=submit]').removeAttr('disabled').fadeTo(200, 1);
+      $('input[type=submit]:visible').removeAttr('disabled').fadeTo(200, 1);
     }
   };
 
   Drupal.OmbuCleanupAjax = {};
 
   Drupal.OmbuCleanupAjax.beforeSubmit = function (form_values, form, options) {
-    $('input[type=submit]', form).attr('disabled', 'disabled').fadeTo(200, .20);
+    $('input[type=submit]:visible', form).attr('disabled', 'disabled').fadeTo(200, .20);
   }
 
 })(jQuery);

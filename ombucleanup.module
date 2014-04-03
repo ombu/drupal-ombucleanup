@@ -91,7 +91,9 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
   $form['options']['sticky']['#access'] = FALSE;
 
   // Don't check pathauto by default.
-  $form['path']['pathauto']['#default_value'] = FALSE;
+  if (!empty($form['nid']['#value'])) {
+    $form['path']['pathauto']['#default_value'] = FALSE;
+  }
 }
 
 /**
@@ -113,6 +115,17 @@ function ombucleanup_form_menu_edit_item_alter(&$form, $form_state) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Clean up media embed help text.
+ */
+function ombucleanup_form_media_internet_add_alter(&$form, $form_state) {
+  $form['embed_code']['#title'] = variable_get('media_embed_help', 'Enter an image URL or a YouTube share link');
+  $form['embed_code']['#description'] = '';
+  $form['providers']['#access'] = FALSE;
+}
+
+/**
  * Implements hook_form_alter().
  */
 function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
@@ -120,7 +133,6 @@ function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
 
     case 'search_block_form':
       unset($form['search_block_form']['#title']);
-      $form['search_block_form']['#default_value'] = 'Search';
       break;
 
     case 'search_form':
@@ -219,6 +231,18 @@ function ombucleanup_form_bean_form_alter(&$form, $form_state) {
 }
 
 /**
+ * Implements hook_element_info_alter().
+ *
+ * Add process function to select elements to remove empty value if chosen is
+ * enabled.
+ */
+function ombucleanup_element_info_alter(&$type) {
+  if (module_exists('chosen')) {
+    $type['select']['#process'][] = 'ombucleanup_select_process';
+  }
+}
+
+/**
  * Implements hook_entity_presave().
  */
 function ombucleanup_entity_presave($entity, $type) {
@@ -228,22 +252,19 @@ function ombucleanup_entity_presave($entity, $type) {
       // Default to use title as label, otherwise use bean type.
       $entity->label = $entity->title ? $entity->title : $entity->type;
 
-      // Check if label is in use, borrowed from Bean:save().
-      $max_length = 32;
-      // Base it on the label and make sure it isn't too long for the database.
+      // Create a truly unique delta for new beans. Bean::add() has the
+      // possibility of generating deltas that existed in beans that have been
+      // previously deleted. This causes problems, especially when a bean has
+      // been deleted but not removed from other systems (e.g. context), causing
+      // the bean to show up in unintended places.
       $entity->delta = drupal_clean_css_identifier(strtolower($entity->label));
-      $entity->delta = substr($entity->delta, 0, $max_length);
 
-      // Check if delta is unique.
-      if (bean_load_delta($entity->delta)) {
-        $i = 0;
-        $separator = '-';
-        $original_delta = $entity->delta;
-        do {
-          $unique_suffix = $separator . $i++;
-          $entity->delta = substr($original_delta, 0, $max_length - drupal_strlen($unique_suffix)) . $unique_suffix;
-        } while (bean_load_delta($entity->delta));
-      }
+      // Make sure it isn't too long for the database.
+      $max_length = 32;
+      $identifier = '-' . db_next_id();
+      $max_length -= strlen($identifier);
+      $entity->delta = substr($entity->delta, 0, $max_length);
+      $entity->delta .= $identifier;
     }
   }
 }
@@ -265,11 +286,10 @@ function ombucleanup_module_implements_alter(&$implementations, $hook) {
  * Implements hook_library_alter().
  */
 function ombucleanup_library_alter(&$libraries, $module) {
-  // If it is an admin path all we want to do is change the global $conf
-  // variable so when jquery_update runs right after us it will use 1.5.
-  if (path_is_admin(current_path()) && module_exists('jquery_update')) {
-    global $conf;
-    $conf['jquery_update_jquery_version'] = '1.5';
+  // Remove patches jquery ui dialog from views, since we're using a current
+  // version.
+  if (isset($libraries['ui.dialog']['js'][drupal_get_path('module', 'views') . '/js/jquery.ui.dialog.patch.js'])) {
+    unset($libraries['ui.dialog']['js'][drupal_get_path('module', 'views') . '/js/jquery.ui.dialog.patch.js']);
   }
 }
 
@@ -279,7 +299,7 @@ function ombucleanup_library_alter(&$libraries, $module) {
  * Change height/width to max-* and add classes for positioning.
  */
 function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings) {
-  if (isset($element['content']['file']) && in_array($element['content']['file']['#theme'], array('image', 'image_formatter'))) {
+  if (isset($element['content']['file']) && isset($element['content']['file']['#theme']) && in_array($element['content']['file']['#theme'], array('image', 'image_formatter'))) {
     $style = '';
     $content =& $element['content']['file'];
 
@@ -316,12 +336,17 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
  * Implements hook_page_alter().
  */
 function ombucleanup_page_alter(&$page) {
-  // Add js to open links in new windows.
-  if (variable_get('external_new_window', 1)) {
+  // Add js to open links in new windows, only on the front end.
+  if (variable_get('external_new_window', 1) && path_is_admin(current_path())) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.external-links.js');
   }
   // Add js to disable submit buttons during ajax requests.
-  drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.disable-ajax.js', array('weight' => 100));
+  if (current_path() != 'media/browser') {
+    drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.disable-ajax.js', array('weight' => 100));
+  }
+
+  // Add CSS to override admin UI styles
+  drupal_add_css(drupal_get_path('module', 'ombucleanup') . '/css/admin.overrides.css');
 }
 
 /**
@@ -337,5 +362,25 @@ function ombucleanup_siteconfig($op, $form) {
     );
 
     return $form;
+  }
+}
+
+/**
+ * Implements hook_oembed_response_alter().
+ *
+ * Alter oembed response so thumbnails are more reasonably sized.
+ */
+function ombucleanup_oembed_response_alter(&$embed) {
+  $embed['thumbnail_width'] = 100;
+}
+
+/**
+ * Implements hook_node_view_alter().
+ *
+ * Remove contextual links for nodes.
+ */
+function ombucleanup_node_view_alter(&$build) {
+  if (variable_get('hide_node_contextual_links', TRUE)) {
+    unset($build['#contextual_links']['node']);
   }
 }
