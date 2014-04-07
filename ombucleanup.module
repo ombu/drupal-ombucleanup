@@ -290,7 +290,7 @@ function ombucleanup_library_alter(&$libraries, $module) {
  * Change height/width to max-* and add classes for positioning.
  */
 function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings) {
-  if (isset($element['content']['file']) && in_array($element['content']['file']['#theme'], array('image', 'image_formatter'))) {
+  if (isset($element['content']['file']) && isset($element['content']['file']['#theme']) && in_array($element['content']['file']['#theme'], array('image', 'image_formatter'))) {
     $style = '';
     $content =& $element['content']['file'];
 
