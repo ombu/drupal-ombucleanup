@@ -384,3 +384,16 @@ function ombucleanup_node_view_alter(&$build) {
     unset($build['#contextual_links']['node']);
   }
 }
+
+/**
+ * Implements hook_menu_breadcrumb_alter().
+ */
+function ombucleanup_menu_breadcrumb_alter(&$active_trail, $item) {
+  if (variable_get('ombucleanup_breadcrumb_hide_special_menu_items', 1)) {
+    foreach ($active_trail as $key => $trail) {
+      if ($trail['link_path'] == '<nolink>' || $trail['link_path'] == '<separator>') {
+        unset($active_trail[$key]);
+      }
+    }
+  }
+}
