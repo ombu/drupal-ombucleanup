@@ -581,7 +581,7 @@ function ombucleanup_oembed_response_alter(&$embed) {
  * Remove contextual links for nodes.
  */
 function ombucleanup_node_view_alter(&$build) {
-  if (variable_get('hide_node_contextual_links', TRUE)) {
+  if (variable_get('hide_node_contextual_links', FALSE)) {
     unset($build['#contextual_links']['node']);
   }
 }
