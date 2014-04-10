@@ -238,16 +238,12 @@ function ombucleanup_image_scale_and_crop_effect(&$image, $data) {
   $image_height = $image->info['height'];
   $width = $data['width'];
   $height = $data['height'];
-  if ($image_width >= $image_height) {
-    $width_ratio = $height / $image_width;
-    $height_ratio = $width / $image_height;
-  }
-  else {
-    $width_ratio = $width / $image_width;
-    $height_ratio = $height / $image_height;
-  }
+
+  $height_ratio = $height / $image_height;
+  $width_ratio = $width / $image_width;
 
   $ratio = max($width_ratio, $height_ratio);
+
   $width = $image_width * $ratio;
   $height = $image_height * $ratio;
 
