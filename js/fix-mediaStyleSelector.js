@@ -5,6 +5,14 @@
  */
 (function($) {
 
+try {
+  Drupal.media.popups.mediaStyleSelector;
+}
+catch(e) {
+  // Not a page with media popups.
+  return;
+}
+
 var overrideMediaStyleSelector = function (mediaFile, onSelect, options) {
   var defaults = Drupal.media.popups.mediaStyleSelector.getDefaults();
   // @todo: remove this awful hack :(
