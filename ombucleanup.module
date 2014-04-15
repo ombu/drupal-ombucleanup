@@ -366,6 +366,15 @@ function ombucleanup_siteconfig($op, $form) {
  * Alter oembed response so thumbnails are more reasonably sized.
  */
 function ombucleanup_oembed_response_alter(&$embed) {
-  $embed['thumbnail_width'] = 100;
-}
+  if (isset($embed['thumbnail_width'])) {
+    if (!isset($embed['thumbnail_height'])) {
+      return;
+    }
 
+    $width = (int) $embed['thumbnail_width'];
+    $height = (int) $embed['thumbnail_height'];
+    $ratio = 100 / $width;
+    $embed['thumbnail_width'] = 100;
+    $embed['thumbnail_height'] = $height * $ratio;
+  }
+}
