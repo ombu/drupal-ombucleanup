@@ -345,6 +345,10 @@ function ombucleanup_page_alter(&$page) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.disable-ajax.js', array('weight' => 100));
   }
 
+  if (path_is_admin(current_path())) {
+    drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/fix-mediaStyleSelector.js', array('weight' => 100));
+  }
+
   // Add CSS to override admin UI styles
   drupal_add_css(drupal_get_path('module', 'ombucleanup') . '/css/admin.overrides.css');
 }
@@ -371,7 +375,16 @@ function ombucleanup_siteconfig($op, $form) {
  * Alter oembed response so thumbnails are more reasonably sized.
  */
 function ombucleanup_oembed_response_alter(&$embed) {
-  $embed['thumbnail_width'] = 100;
+  if (isset($embed['thumbnail_width'])) {
+    if (!isset($embed['thumbnail_height'])) {
+      return;
+    }
+    $width = (int) $embed['thumbnail_width'];
+    $height = (int) $embed['thumbnail_height'];
+    $ratio = 100 / $width;
+    $embed['thumbnail_width'] = 100;
+    $embed['thumbnail_height'] = $height * $ratio;
+	}
 }
 
 /**
