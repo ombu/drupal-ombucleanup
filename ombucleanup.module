@@ -150,6 +150,15 @@ function ombucleanup_block_view($delta = '') {
 }
 
 /**
+ * Implements hook_block_view_MODULE_DELTA_alter().
+ */
+function ombucleanup_block_view_system_main_alter(&$build, $block) {
+  if ($node = menu_get_object()) {
+    $build['content']['#contextual_links']['node'] = array('node', array($node->nid));
+  }
+}
+
+/**
  * Implements hook_ctools_plugin_api().
  */
 function ombucleanup_ctools_plugin_api($module, $api) {
