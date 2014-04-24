@@ -14,6 +14,10 @@ function ombucleanup_token_info() {
     'description' => t('An array of menu parents that are not speial menu items'),
     'type' => 'array',
   );
+  $info['tokens']['node']['title-or-menu-link'] = array(
+    'name' => t('Menu title or node title'),
+    'description' => t('Uses menu title, with node title as fallback'),
+  );
   return $info;
 }
 
@@ -44,7 +48,23 @@ function ombucleanup_tokens($type, $tokens, array $data = array(), array $option
     }
   }
 
-return $replacements;
+  if ($type == 'node' && !empty($data['node'])) {
+    $node =  $data['node'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'title-or-menu-link':
+          if (!$node->menu) {
+            menu_node_prepare($node);
+          }
+
+          $replacements[$original] = !empty($node->menu['link_title']) ? $node->menu['link_title'] : $node->title;
+          break;
+      }
+    }
+  }
+
+  return $replacements;
 }
 
 /**
