@@ -17,3 +17,7 @@ tr.even .form-item {
 .container-inline .form-item-operation {
   margin-right: 5.0em;
 }
+ul.media-list-thumbnails .media-thumbnail {
+  width: 100px;
+  height: 115px;
+}
