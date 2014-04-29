@@ -231,18 +231,6 @@ function ombucleanup_form_bean_form_alter(&$form, $form_state) {
 }
 
 /**
- * Implements hook_element_info_alter().
- *
- * Add process function to select elements to remove empty value if chosen is
- * enabled.
- */
-function ombucleanup_element_info_alter(&$type) {
-  if (module_exists('chosen')) {
-    $type['select']['#process'][] = 'ombucleanup_select_process';
-  }
-}
-
-/**
  * Implements hook_entity_presave().
  */
 function ombucleanup_entity_presave($entity, $type) {
