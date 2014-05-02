@@ -405,6 +405,17 @@ function ombucleanup_cleanup_paste() {
 }
 
 /**
+ * Implements hook_block_view_alter().
+ *
+ * Remove contextual links for menu blocks.
+ */
+function ombucleanup_block_view_alter(&$data, $block) {
+  if (isset($data['content']['#contextual_links']['menu'])) {
+    unset($data['content']['#contextual_links']['menu']);
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  */
 function ombucleanup_form_bean_form_alter(&$form, $form_state) {
