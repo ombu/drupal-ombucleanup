@@ -68,6 +68,17 @@ function ombucleanup_menu_alter(&$items) {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function ombucleanup_theme() {
+  return array(
+    'ombucleanup_site_logo' => array(
+      'variables' => array('site_name' => null),
+    ),
+  );
+}
+
+/**
  * Access callback for taxonomy menu items.
  *
  * Hide taxonomy menu tabs for all users except uid 1.
@@ -110,10 +121,9 @@ function ombucleanup_block_view($delta = '') {
     case 'site_logo':
       $block['subject'] = '';
       $block['content'] = array(
-        'foo' => array(
-          '#markup' => variable_get('site_name', 'Site Name'),
-          '#prefix' => '<a href="/" class="brand">',
-          '#suffix' => '</a>',
+        'site_logo' => array(
+          '#theme' => 'ombucleanup_site_logo',
+          '#site_name' => variable_get('site_name', 'Site Name'),
         ),
       );
       break;
@@ -609,4 +619,15 @@ function ombucleanup_menu_breadcrumb_alter(&$active_trail, $item) {
 function ombucleanup_404_page() {
   drupal_set_title(t('Page not found'));
   return t('The requested page could not be found.');
+}
+
+/**
+ * Default implementation for site logo block theme function.
+ */
+function theme_ombucleanup_site_logo($variables) {
+  return l($variables['site_name'], '<front>', array(
+    'attributes' => array(
+      'class' => array('brand'),
+    )
+  ));
 }
