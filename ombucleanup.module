@@ -21,6 +21,13 @@ function ombucleanup_permission() {
  * Implements hook_menu().
  */
 function ombucleanup_menu() {
+  $items['ombucleanup_404'] = array(
+    'title' => t('Page not found'),
+    'access callback' => TRUE,
+    'page callback' => 'ombucleanup_404_page',
+    'type' => MENU_CALLBACK,
+  );
+
   $items['ombucleanup/cleanup-paste'] = array(
     'page callback' => 'ombucleanup_cleanup_paste',
     'access callback' => TRUE,
@@ -69,6 +76,192 @@ function ombucleanup_taxonomy_access() {
   global $user;
   if ($user->uid == 1) {
     return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function ombucleanup_block_info() {
+  // Define site specific blocks here.
+  $blocks = array();
+  $blocks['site_logo'] = array(
+    'info' => t('Site Logo'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+  $blocks['page_title'] = array(
+    'info' => t('Page Title'),
+    'cache' => DRUPAL_CACHE_PER_PAGE,
+  );
+  $blocks['breadcrumb'] = array(
+    'info' => t('Breadcrumb'),
+    'cache' => DRUPAL_CACHE_PER_PAGE,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function ombucleanup_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'site_logo':
+      $block['subject'] = '';
+      $block['content'] = array(
+        'foo' => array(
+          '#markup' => variable_get('site_name', 'Site Name'),
+          '#prefix' => '<a href="/" class="brand">',
+          '#suffix' => '</a>',
+        ),
+      );
+      break;
+
+    case 'page_title':
+      $block['subject'] = '';
+      $block['content'] = '';
+      // Hide the title on the front page.
+      // @todo: make this a setting, or at least more configurable.
+      if (!drupal_is_front_page() && !variable_get('ombucleanup_hide_title', FALSE)) {
+        $block['content'] = array(
+          'title' => array(
+            '#markup' => drupal_get_title(),
+            '#prefix' => '<h1>',
+            '#suffix' => '</h1>',
+          ),
+        );
+      }
+      break;
+
+    case 'breadcrumb':
+      $block['subject'] = '';
+      $block['content'] = '';
+      if ($breadcrumb = drupal_get_breadcrumb()) {
+        $block['content'] = array(
+          'breadcrumb' => array(
+            '#markup' => theme('breadcrumb', array('breadcrumb' => drupal_get_breadcrumb())),
+          ),
+        );
+      }
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_block_view_MODULE_DELTA_alter().
+ */
+function ombucleanup_block_view_system_main_alter(&$build, $block) {
+  if ($node = menu_get_object()) {
+    $build['content']['#contextual_links']['node'] = array('node', array($node->nid));
+  }
+}
+
+/**
+ * Implements hook_ctools_plugin_api().
+ */
+function ombucleanup_ctools_plugin_api($module, $api) {
+  if ($module == 'context' && $api == 'plugins') {
+    return array('version' => 3);
+  }
+}
+
+/**
+ * Implements hook_context_plugins().
+ */
+function ombucleanup_context_plugins() {
+  $plugins = array();
+  $plugins['context_condition_frontend'] = array(
+    'handler' => array(
+      'path' => drupal_get_path('module', 'ombucleanup') . '/plugins',
+      'file' => 'context_condition_frontend.inc',
+      'class' => 'context_condition_frontend',
+      'parent' => 'context_condition',
+    ),
+  );
+  return $plugins;
+}
+
+/**
+ * Implements of hook_context_registry().
+ */
+function ombucleanup_context_registry() {
+  $registry = array();
+
+  $registry['conditions'] = array(
+    'frontend' => array(
+      'title' => t('Front End Theme'),
+      'description' => 'This condition triggers on pages themed with theme_default.',
+      'plugin' => 'context_condition_frontend',
+    ),
+  );
+  return $registry;
+}
+
+/**
+ * Implements of hook_context_page_reaction().
+ */
+function ombucleanup_context_page_condition() {
+  global $theme;
+  if ($plugin = context_get_plugin('condition', 'frontend')) {
+    $plugin->execute($theme);
+  }
+}
+
+/**
+ * Implements hook_image_effect_info().
+ *
+ * New image effect to scale/crop with ability to select center point.
+ */
+function ombucleanup_image_effect_info() {
+  $effects = array(
+    'image_scale_and_crop_center' => array(
+      'label' => t('Scale and crop - centering'),
+      'help' => t('Scale and crop will maintain the aspect-ratio of the original image, then crop the larger dimension with the ability to select center point.'),
+      'effect callback' => 'ombucleanup_image_scale_and_crop_effect',
+      'dimensions callback' => 'image_resize_dimensions',
+      'form callback' => 'image_crop_form',
+      'summary theme' => 'image_resize_summary',
+    ),
+  );
+
+  return $effects;
+}
+
+/**
+ * Image effect callback.
+ */
+function ombucleanup_image_scale_and_crop_effect(&$image, $data) {
+  // Set sane default values.
+  $data += array(
+    'anchor' => 'center-top',
+    'upscale' => TRUE,
+  );
+
+  // Figure out the correct aspect ratio to scale image to in order for the
+  // cropping to result in a true sized crop. This means that in some cases the
+  // height and the width will be greater than the dimensions expected for the
+  // crop.
+  $image_width = $image->info['width'];
+  $image_height = $image->info['height'];
+  $width = $data['width'];
+  $height = $data['height'];
+
+  $height_ratio = $height / $image_height;
+  $width_ratio = $width / $image_width;
+
+  $ratio = max($width_ratio, $height_ratio);
+
+  $width = $image_width * $ratio;
+  $height = $image_height * $ratio;
+
+  if (image_resize($image, $width, $height)) {
+    list($x, $y) = explode('-', $data['anchor']);
+    $x = image_filter_keyword($x, $image->info['width'], $data['width']);
+    $y = image_filter_keyword($y, $image->info['height'], $data['height']);
+
+    return image_crop($image, $x, $y, $data['width'], $data['height']);
   }
   return FALSE;
 }
@@ -209,6 +402,17 @@ function ombucleanup_cleanup_paste() {
 
   drupal_json_output($output);
   exit;
+}
+
+/**
+ * Implements hook_block_view_alter().
+ *
+ * Remove contextual links for menu blocks.
+ */
+function ombucleanup_block_view_alter(&$data, $block) {
+  if (isset($data['content']['#contextual_links']['menu'])) {
+    unset($data['content']['#contextual_links']['menu']);
+  }
 }
 
 /**
@@ -381,7 +585,7 @@ function ombucleanup_oembed_response_alter(&$embed) {
  * Remove contextual links for nodes.
  */
 function ombucleanup_node_view_alter(&$build) {
-  if (variable_get('hide_node_contextual_links', TRUE)) {
+  if (variable_get('hide_node_contextual_links', FALSE)) {
     unset($build['#contextual_links']['node']);
   }
 }
@@ -397,4 +601,12 @@ function ombucleanup_menu_breadcrumb_alter(&$active_trail, $item) {
       }
     }
   }
+}
+
+/**
+ * 404 page callback.
+ */
+function ombucleanup_404_page() {
+  drupal_set_title(t('Page not found'));
+  return t('The requested page could not be found.');
 }
