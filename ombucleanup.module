@@ -22,7 +22,7 @@ function ombucleanup_permission() {
  */
 function ombucleanup_menu() {
   $items['ombucleanup_404'] = array(
-    'title' => t('Page not found'),
+    'title' => 'Page not found',
     'access callback' => TRUE,
     'page callback' => 'ombucleanup_404_page',
     'type' => MENU_CALLBACK,
@@ -68,6 +68,17 @@ function ombucleanup_menu_alter(&$items) {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function ombucleanup_theme() {
+  return array(
+    'ombucleanup_site_logo' => array(
+      'variables' => array('site_name' => NULL),
+    ),
+  );
+}
+
+/**
  * Access callback for taxonomy menu items.
  *
  * Hide taxonomy menu tabs for all users except uid 1.
@@ -110,10 +121,9 @@ function ombucleanup_block_view($delta = '') {
     case 'site_logo':
       $block['subject'] = '';
       $block['content'] = array(
-        'foo' => array(
-          '#markup' => variable_get('site_name', 'Site Name'),
-          '#prefix' => '<a href="/" class="brand">',
-          '#suffix' => '</a>',
+        'site_logo' => array(
+          '#theme' => 'ombucleanup_site_logo',
+          '#site_name' => variable_get('site_name', 'Site Name'),
         ),
       );
       break;
@@ -153,8 +163,10 @@ function ombucleanup_block_view($delta = '') {
  * Implements hook_block_view_MODULE_DELTA_alter().
  */
 function ombucleanup_block_view_system_main_alter(&$build, $block) {
+  // Add node edit links when viewing a full node page.
   if ($node = menu_get_object()) {
-    $build['content']['#contextual_links']['node'] = array('node', array($node->nid));
+    // Ensure that node links appear first.
+    $build['content']['#contextual_links'] = array('node' => array('node', array($node->nid))) + $build['content']['#contextual_links'];
   }
 }
 
@@ -184,7 +196,7 @@ function ombucleanup_context_plugins() {
 }
 
 /**
- * Implements of hook_context_registry().
+ * Implements hook_context_registry().
  */
 function ombucleanup_context_registry() {
   $registry = array();
@@ -200,7 +212,7 @@ function ombucleanup_context_registry() {
 }
 
 /**
- * Implements of hook_context_page_reaction().
+ * Implements hook_context_page_reaction().
  */
 function ombucleanup_context_page_condition() {
   global $theme;
@@ -303,7 +315,7 @@ function ombucleanup_form_user_profile_form_alter(&$form, $form_state) {
 function ombucleanup_form_menu_edit_item_alter(&$form, $form_state) {
   // If special_menu_items is enabled, add extra help text to description.
   if (module_exists('special_menu_items')) {
-    $form['link_title']['#description'] .= t('  If creating a seprator menu item (using <em>&lt;separator&gt;</em> as the path), it is recommended to use <em>"&lt;separator&gt;"</em> as the title.');
+    $form['link_title']['#description'] .= '  ' . t('If creating a seprator menu item (using <em>&lt;separator&gt;</em> as the path), it is recommended to use <em>"&lt;separator&gt;"</em> as the title.');
   }
 }
 
@@ -386,7 +398,8 @@ function ombucleanup_wysiwyg_plugin($editor, $version) {
 function ombucleanup_cleanup_paste() {
   $output = array();
 
-  $format = 'default'; // $_POST['format'];
+  // $format = $_POST['format'];
+  $format = 'default';
 
   if (user_access('use text format ' . $format)) {
     $html = $_POST['html'];
@@ -405,6 +418,17 @@ function ombucleanup_cleanup_paste() {
 }
 
 /**
+ * Implements hook_block_view_alter().
+ *
+ * Remove contextual links for menu blocks.
+ */
+function ombucleanup_block_view_alter(&$data, $block) {
+  if (isset($data['content']['#contextual_links']['menu'])) {
+    unset($data['content']['#contextual_links']['menu']);
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  */
 function ombucleanup_form_bean_form_alter(&$form, $form_state) {
@@ -420,18 +444,6 @@ function ombucleanup_form_bean_form_alter(&$form, $form_state) {
   // Hide redirects, if module exists.
   if (module_exists('redirect')) {
     $form['redirect']['#access'] = FALSE;
-  }
-}
-
-/**
- * Implements hook_element_info_alter().
- *
- * Add process function to select elements to remove empty value if chosen is
- * enabled.
- */
-function ombucleanup_element_info_alter(&$type) {
-  if (module_exists('chosen')) {
-    $type['select']['#process'][] = 'ombucleanup_select_process';
   }
 }
 
@@ -542,7 +554,7 @@ function ombucleanup_page_alter(&$page) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/fix-mediaStyleSelector.js', array('weight' => 100));
   }
 
-  // Add CSS to override admin UI styles
+  // Add CSS to override admin UI styles.
   drupal_add_css(drupal_get_path('module', 'ombucleanup') . '/css/admin.overrides.css');
 }
 
@@ -577,7 +589,7 @@ function ombucleanup_oembed_response_alter(&$embed) {
     $ratio = 100 / $width;
     $embed['thumbnail_width'] = 100;
     $embed['thumbnail_height'] = $height * $ratio;
-	}
+  }
 }
 
 /**
@@ -610,4 +622,15 @@ function ombucleanup_menu_breadcrumb_alter(&$active_trail, $item) {
 function ombucleanup_404_page() {
   drupal_set_title(t('Page not found'));
   return t('The requested page could not be found.');
+}
+
+/**
+ * Default implementation for site logo block theme function.
+ */
+function theme_ombucleanup_site_logo($variables) {
+  return l($variables['site_name'], '<front>', array(
+    'attributes' => array(
+      'class' => array('brand'),
+    ),
+  ));
 }
