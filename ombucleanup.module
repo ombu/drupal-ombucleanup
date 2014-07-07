@@ -163,8 +163,10 @@ function ombucleanup_block_view($delta = '') {
  * Implements hook_block_view_MODULE_DELTA_alter().
  */
 function ombucleanup_block_view_system_main_alter(&$build, $block) {
+  // Add node edit links when viewing a full node page.
   if ($node = menu_get_object()) {
-    $build['content']['#contextual_links']['node'] = array('node', array($node->nid));
+    // Ensure that node links appear first.
+    $build['content']['#contextual_links'] = array('node' => array('node', array($node->nid))) + $build['content']['#contextual_links'];
   }
 }
 
