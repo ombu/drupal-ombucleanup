@@ -164,7 +164,7 @@ function ombucleanup_block_view($delta = '') {
  */
 function ombucleanup_block_view_system_main_alter(&$build, $block) {
   // Add node edit links when viewing a full node page.
-  if ($node = menu_get_object()) {
+  if (!path_is_admin(current_path()) && $node = menu_get_object()) {
     // Ensure that node links appear first.
     $build['content']['#contextual_links'] = array('node' => array('node', array($node->nid))) + $build['content']['#contextual_links'];
   }
