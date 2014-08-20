@@ -61,6 +61,17 @@ function ombucleanup_menu_alter(&$items) {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function ombucleanup_theme($existing, $type, $theme, $path) {
+  return array(
+    'ombucleanup_relative_date' => array(
+      'variables' => array('timestamp' => NULL),
+    ),
+  );
+}
+
+/**
  * Access callback for taxonomy menu items.
  *
  * Hide taxonomy menu tabs for all users except uid 1.
@@ -282,6 +293,22 @@ function ombucleanup_library_alter(&$libraries, $module) {
 }
 
 /**
+ * Implements hook_library().
+ */
+function ombucleanup_library() {
+  $libraries['relative_date'] = array(
+    'title' => 'Relative date',
+    'website' => '',
+    'version' => '0.1',
+    'js' => array(
+      drupal_get_path('module', 'ombucleanup') . '/js/drupal.relative-date.js' => array(),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
  * Implements hook_media_token_to_markup_alter().
  *
  * Change height/width to max-* and add classes for positioning.
@@ -397,4 +424,47 @@ function ombucleanup_menu_breadcrumb_alter(&$active_trail, $item) {
       }
     }
   }
+}
+
+/**
+ * Formats a date as relative.
+ *
+ * Adds JS library to handle formatting on frontend to bypass stale dates on
+ * cache pages.
+ *
+ * @param timestamp $timestamp
+ *   The Unix timestamp to show as relative.
+ *
+ * @return string
+ *   The date string relative to current time.
+ */
+function ombucleanup_format_relative_date($timestamp) {
+  static $library_included = FALSE;
+
+  if (!$library_included) {
+    drupal_add_library('ombucleanup', 'relative_date');
+    $library_included = TRUE;
+  }
+
+  return theme('ombucleanup_relative_date', array(
+    'timestamp' => $timestamp,
+  ));
+}
+
+/**
+ * Preprocess function for relative date function.
+ */
+function template_preprocess_ombucleanup_relative_date(&$variables) {
+  // Format relative date from requested time.
+  $variables['relative_date'] = format_interval(REQUEST_TIME - $variables['timestamp'], 1);
+}
+
+/**
+ * Theme callback for relative dates.
+ */
+function theme_ombucleanup_relative_date($variables) {
+  return t('<span class="relative-date">Posted <span data-timestamp="!timestamp">!date</span> ago</span>', array(
+    '!timestamp' => $variables['timestamp'],
+    '!date' => $variables['relative_date'],
+  ));
 }
