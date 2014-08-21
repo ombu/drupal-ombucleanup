@@ -3,7 +3,7 @@
   Drupal.behaviors.relativeDate = {
     attach: function(context, settings) {
       $('.relative-date span', context).once('relative-date').each(function() {
-        var date = new Date(parseInt($(this).attr('data-timestamp')));
+        var date = new Date(parseInt($(this).attr('data-timestamp')) * 1000);
         $(this).html(Drupal.relativeDate.fromNow(date));
       });
     }
@@ -13,28 +13,27 @@
 
   Drupal.relativeDate.fromNow = function(date) {
     var seconds = Math.floor((new Date() - date) / 1000);
-    var interval = Math.floor(seconds / 31536000);
 
-    if (interval > 1) {
-        return interval + " years";
+    var units = {
+      'year|years': 31536000,
+      'month|months': 2592000,
+      'week|weeks': 604800,
+      'day|days': 86400,
+      'hour|hours': 3600,
+      'min|min': 60,
+      'sec|sec': 1
+    };
+
+    for (key in units) {
+      var parts = key.split('|');
+
+      if (seconds >= units[key]) {
+        var count = Math.floor(seconds / units[key]);
+
+        return (count == 1) ? '1 ' + parts[0] : count + ' ' + parts[1];
+      }
     }
-    interval = Math.floor(seconds / 2592000);
-    if (interval > 1) {
-        return interval + " months";
-    }
-    interval = Math.floor(seconds / 86400);
-    if (interval > 1) {
-        return interval + " days";
-    }
-    interval = Math.floor(seconds / 3600);
-    if (interval > 1) {
-        return interval + " hours";
-    }
-    interval = Math.floor(seconds / 60);
-    if (interval > 1) {
-        return interval + " minutes";
-    }
-    return Math.floor(seconds) + " seconds";
+    return '0 sec';
   }
 
 })(jQuery);
