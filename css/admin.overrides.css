@@ -21,3 +21,6 @@ ul.media-list-thumbnails .media-thumbnail {
   width: 100px;
   height: 115px;
 }
+.link-field-column:first-child {
+  padding-right: 10px;
+}
