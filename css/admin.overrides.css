@@ -14,7 +14,7 @@ tr.even .form-item {
 .select2-container {
   min-width: 100px;
 }
-.page-admin ul.admin-list li a {
+.page-admin-dashboard ul.admin-list li a {
   margin-left: 0;
 }
 .container-inline .form-item-operation {
