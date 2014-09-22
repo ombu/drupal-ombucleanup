@@ -14,10 +14,16 @@ tr.even .form-item {
 .select2-container {
   min-width: 100px;
 }
+.page-admin-dashboard ul.admin-list li a {
+  margin-left: 0;
+}
 .container-inline .form-item-operation {
   margin-right: 5.0em;
 }
 ul.media-list-thumbnails .media-thumbnail {
   width: 100px;
   height: 115px;
+}
+.link-field-column:first-child {
+  padding-right: 10px;
 }

@@ -164,7 +164,7 @@ function ombucleanup_block_view($delta = '') {
  */
 function ombucleanup_block_view_system_main_alter(&$build, $block) {
   // Add node edit links when viewing a full node page.
-  if ($node = menu_get_object()) {
+  if (!path_is_admin(current_path()) && $node = menu_get_object()) {
     // Ensure that node links appear first.
     $build['content']['#contextual_links'] = array('node' => array('node', array($node->nid))) + $build['content']['#contextual_links'];
   }
@@ -594,12 +594,22 @@ function ombucleanup_oembed_response_alter(&$embed) {
 
 /**
  * Implements hook_node_view_alter().
- *
- * Remove contextual links for nodes.
  */
 function ombucleanup_node_view_alter(&$build) {
+  // Remove contextual links for nodes.
   if (variable_get('hide_node_contextual_links', FALSE)) {
     unset($build['#contextual_links']['node']);
+  }
+
+  // Hide social links for nodes/view modes that haven't been whitelisted in
+  // social_links_whitelist variable.
+  // @todo: add an admin UI for controlling which node type/view mode social
+  // links should be shown.
+  if (isset($build['social_links'])) {
+    $whitelist = variable_get('social_links_whitelist', array());
+    if (!in_array($build['#bundle'] . ':' . $build['#view_mode'], $whitelist)) {
+      $build['social_links']['#access'] = FALSE;
+    }
   }
 }
 
