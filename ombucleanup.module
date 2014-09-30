@@ -431,9 +431,13 @@ function ombucleanup_htmlpurifier_html_definition_alter($html_definition) {
     'Flow',
     'Common',
     array(
-      'src',
+      'src' => 'URI',
+      'width' => 'Number',
+      'height' => 'Number',
     ));
   $html_definition->addAttribute('iframe', 'src', 'URI');
+  $html_definition->addAttribute('iframe', 'width', 'Number');
+  $html_definition->addAttribute('iframe', 'height', 'Number');
 }
 
 /**
