@@ -418,6 +418,25 @@ function ombucleanup_cleanup_paste() {
 }
 
 /**
+ * Implements hook_htmlpurifier_html_definition_alter().
+ *
+ * Add additional supported elements to html purfier.
+ *
+ * @see http://htmlpurifier.org/docs/enduser-customize.html
+ */
+function ombucleanup_htmlpurifier_html_definition_alter($html_definition) {
+  $html_definition->addElement(
+    'iframe',
+    'Block',
+    'Flow',
+    'Common',
+    array(
+      'src',
+    ));
+  $html_definition->addAttribute('iframe', 'src', 'URI');
+}
+
+/**
  * Implements hook_block_view_alter().
  *
  * Remove contextual links for menu blocks.
