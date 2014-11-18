@@ -556,6 +556,7 @@ function ombucleanup_page_alter(&$page) {
 
   if (path_is_admin(current_path())) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/fix-mediaStyleSelector.js', array('weight' => 100));
+    drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.fix-select2-ajax.js', array('weight' => 100));
   }
 
   // Add CSS to override admin UI styles.
