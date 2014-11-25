@@ -48,6 +48,9 @@ function ombucleanup_menu_alter(&$items) {
   unset($items['node/%node/track']);
   unset($items['user/%user/track/navigation']);
 
+  // Hide user list/permissions tabs on user create screen.
+  $items['admin/people/create']['type'] = MENU_NORMAL_ITEM;
+
   // Hide taxonomy menu tabs for all users except uid 1.
   $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/edit']['access callback'] = 'ombucleanup_taxonomy_access';
   $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/fields']['access callback'] = 'ombucleanup_taxonomy_access';
