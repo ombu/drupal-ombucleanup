@@ -8,3 +8,4 @@ version = 7.x-0.4.3
 
 files[] = ombucleanup.install
 files[] = ombucleanup.module
+files[] = plugins/OmbucleanupFacetapiSelectDropdowns.php
