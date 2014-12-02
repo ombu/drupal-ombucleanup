@@ -16,34 +16,42 @@ class OmbucleanupFacetapiSelectDropdowns extends FacetapiWidgetLinks {
 
     $settings = $this->settings;
 
+    // If there's an active facet, pass off to parent to handle links.
     $facet_active = FALSE;
     foreach ($element as $item) {
-      $path = !empty($this->settings->settings['submit_page']) ? $this->settings->settings['submit_page'] : $item['#path'];
-      $path = strpos($item['#path'], $path) === 0 ? $item['#path'] : $path;
-      $url = url($path, array('query' => $item['#query']));
-      $options[$url] = $item['#markup'] . ' (' . $item['#count'] . ')';
       if ($item['#active']) {
         $facet_active = TRUE;
+        break;
       }
+    }
+    if ($facet_active) {
+      parent::execute();
+      return;
+    }
+
+    $facet_info = $this->facet->getFacet();
+
+    // Show options with optgroup for created field.
+    if ($facet_info['field'] == 'ds_created') {
+      $options = $this->buildOptgroupOptions($element);
+    }
+    else {
+      $options = $this->buildOptions($element);
     }
 
     if (!$facet_active) {
       if (!empty($settings->settings['default_option_label'])) {
-        array_unshift($options, $settings->settings['default_option_label']);
+        $options = array($settings->settings['default_option_label']) + $options;
       }
       else {
-        array_unshift($options, t('--Choose--'));
+        $options = array(t('--Choose--')) + $options;
       }
     }
 
     // We keep track of how many facets we're adding, because each facet form
     // needs a different form id.
     if (end($options) !== '(-)') {
-      $element = facetapi_select_facet_form($form_state, $options, $count);
-
-      $element['#attached']['js'][] = array(
-        drupal_get_path('module', 'ombucleanup') . '/js/facetapi_select.js',
-      );
+      $element = $this->createSelectElement($options, $count);
     }
   }
 
@@ -60,6 +68,40 @@ class OmbucleanupFacetapiSelectDropdowns extends FacetapiWidgetLinks {
   }
 
   /**
+   * Build options from facet.
+   */
+  protected function buildOptions($element) {
+    $options = array();
+
+    foreach ($element as $item) {
+      $path = !empty($this->settings->settings['submit_page']) ? $this->settings->settings['submit_page'] : $item['#path'];
+      $path = strpos($item['#path'], $path) === 0 ? $item['#path'] : $path;
+      $url = url($path, array('query' => $item['#query']));
+      $options[$url] = $item['#markup'] . ' (' . $item['#count'] . ')';
+    }
+
+    return $options;
+  }
+
+  /**
+   * Build options with optgroups (for dates).
+   */
+  protected function buildOptgroupOptions($element) {
+    $options = array();
+
+    foreach ($element as $item) {
+      list($month, $year) = explode(' ', $item['#markup']);
+
+      $path = !empty($this->settings->settings['submit_page']) ? $this->settings->settings['submit_page'] : $item['#path'];
+      $path = strpos($item['#path'], $path) === 0 ? $item['#path'] : $path;
+      $url = url($path, array('query' => $item['#query']));
+      $options[$year][$url] = $item['#markup'] . ' (' . $item['#count'] . ')';
+    }
+
+    return $options;
+  }
+
+  /**
    * Creates a select facet form.
    */
   protected function createSelectElement($options, $count) {
@@ -70,11 +112,6 @@ class OmbucleanupFacetapiSelectDropdowns extends FacetapiWidgetLinks {
       '#default_value' => '',
       '#options' => $options,
       '#attributes' => array('onchange' => "top.location.href=document.getElementById('$name').options[document.getElementById('$name').selectedIndex].value"),
-    );
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#attributes' => array('class' => array('facetapi-select-submit')),
-      '#value' => t('Submit'),
     );
     return $form;
   }
