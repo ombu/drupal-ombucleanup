@@ -68,6 +68,60 @@ class OmbucleanupFacetapiSelectDropdowns extends FacetapiWidgetLinks {
   }
 
   /**
+   * Implements parent::buildListItems().
+   */
+  public function buildListItems($build) {
+    $settings = $this->settings->settings;
+
+    // Initializes links attributes, adds rel="nofollow" if configured.
+    $attributes = ($settings['nofollow']) ? array('rel' => 'nofollow') : array();
+    $attributes += array('class' => $this->getItemClasses());
+
+    // Builds rows.
+    $items = array();
+    foreach ($build as $value => $item) {
+      $row = array('class' => array());
+
+      // Allow adding classes via altering.
+      if (isset($item['#class'])) {
+        $attributes['class'] = array_merge($attributes['class'], $item['#class']);
+      }
+      // Initializes variables passed to theme hook.
+      $variables = array(
+        'text' => $item['#markup'],
+        'path' => $item['#path'],
+        'count' => $item['#count'],
+        'options' => array(
+          'attributes' => $attributes,
+          'html' => $item['#html'],
+          'query' => $item['#query'],
+        ),
+      );
+
+      // Adds the facetapi-zero-results class to items that have no results.
+      if (!$item['#count']) {
+        $variables['options']['attributes']['class'][] = 'facetapi-zero-results';
+      }
+
+      // Add an ID to identify this link.
+      $variables['options']['attributes']['id'] = drupal_html_id('facetapi-link');
+
+      $row['class'][] = 'leaf';
+
+      // Gets theme hook, adds last minute classes.
+      $class = ($item['#active']) ? 'facetapi-active' : 'facetapi-inactive';
+      $variables['options']['attributes']['class'][] = $class;
+
+      // Themes the link, adds row to items.
+      $row['data'] = theme($item['#theme'], $variables);
+      $items[] = $row;
+    }
+
+    return $items;
+  }
+
+
+  /**
    * Build options from facet.
    */
   protected function buildOptions($element) {
