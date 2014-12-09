@@ -452,6 +452,9 @@ function ombucleanup_block_view_alter(&$data, $block) {
   if (isset($data['content']['#contextual_links']['menu'])) {
     unset($data['content']['#contextual_links']['menu']);
   }
+  if (isset($data['content']['#contextual_links']['menu_block'])) {
+    unset($data['content']['#contextual_links']['menu_block']);
+  }
 }
 
 /**
