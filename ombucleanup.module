@@ -48,6 +48,9 @@ function ombucleanup_menu_alter(&$items) {
   unset($items['node/%node/track']);
   unset($items['user/%user/track/navigation']);
 
+  // Hide user list/permissions tabs on user create screen.
+  $items['admin/people/create']['type'] = MENU_NORMAL_ITEM;
+
   // Hide taxonomy menu tabs for all users except uid 1.
   $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/edit']['access callback'] = 'ombucleanup_taxonomy_access';
   $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/fields']['access callback'] = 'ombucleanup_taxonomy_access';
@@ -164,7 +167,7 @@ function ombucleanup_block_view($delta = '') {
  */
 function ombucleanup_block_view_system_main_alter(&$build, $block) {
   // Add node edit links when viewing a full node page.
-  if ($node = menu_get_object()) {
+  if (!path_is_admin(current_path()) && $node = menu_get_object()) {
     // Ensure that node links appear first.
     $build['content']['#contextual_links'] = array('node' => array('node', array($node->nid))) + $build['content']['#contextual_links'];
   }
@@ -418,6 +421,29 @@ function ombucleanup_cleanup_paste() {
 }
 
 /**
+ * Implements hook_htmlpurifier_html_definition_alter().
+ *
+ * Add additional supported elements to html purfier.
+ *
+ * @see http://htmlpurifier.org/docs/enduser-customize.html
+ */
+function ombucleanup_htmlpurifier_html_definition_alter($html_definition) {
+  $html_definition->addElement(
+    'iframe',
+    'Block',
+    'Flow',
+    'Common',
+    array(
+      'src' => 'URI',
+      'width' => 'Number',
+      'height' => 'Number',
+    ));
+  $html_definition->addAttribute('iframe', 'src', 'URI');
+  $html_definition->addAttribute('iframe', 'width', 'Number');
+  $html_definition->addAttribute('iframe', 'height', 'Number');
+}
+
+/**
  * Implements hook_block_view_alter().
  *
  * Remove contextual links for menu blocks.
@@ -425,6 +451,9 @@ function ombucleanup_cleanup_paste() {
 function ombucleanup_block_view_alter(&$data, $block) {
   if (isset($data['content']['#contextual_links']['menu'])) {
     unset($data['content']['#contextual_links']['menu']);
+  }
+  if (isset($data['content']['#contextual_links']['menu_block'])) {
+    unset($data['content']['#contextual_links']['menu_block']);
   }
 }
 
@@ -518,6 +547,10 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
       $style .= 'max-width: ' . $matches[1] . 'px; ';
       $style .= 'max-height: ' . $matches[2] . 'px;';
     }
+    elseif (isset($content['#attributes']['style']) && preg_match('/height: ?(\d*)px; width: ?(\d*)px;/', $content['#attributes']['style'], $matches)) {
+      $style .= 'max-width: ' . $matches[2] . 'px; ';
+      $style .= 'max-height: ' . $matches[1] . 'px;';
+    }
     elseif (isset($content['#attributes']['width']) && isset($content['#attributes']['height'])) {
       $style .= 'max-width: ' . $content['#attributes']['width'] . 'px; ';
       $style .= 'max-height: ' . $content['#attributes']['height'] . 'px;';
@@ -552,6 +585,7 @@ function ombucleanup_page_alter(&$page) {
 
   if (path_is_admin(current_path())) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/fix-mediaStyleSelector.js', array('weight' => 100));
+    drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.fix-select2-ajax.js', array('weight' => 100));
   }
 
   // Add CSS to override admin UI styles.
@@ -594,12 +628,22 @@ function ombucleanup_oembed_response_alter(&$embed) {
 
 /**
  * Implements hook_node_view_alter().
- *
- * Remove contextual links for nodes.
  */
 function ombucleanup_node_view_alter(&$build) {
+  // Remove contextual links for nodes.
   if (variable_get('hide_node_contextual_links', FALSE)) {
     unset($build['#contextual_links']['node']);
+  }
+
+  // Hide social links for nodes/view modes that haven't been whitelisted in
+  // social_links_whitelist variable.
+  // @todo: add an admin UI for controlling which node type/view mode social
+  // links should be shown.
+  if (isset($build['social_links'])) {
+    $whitelist = variable_get('social_links_whitelist', array());
+    if (!in_array($build['#bundle'] . ':' . $build['#view_mode'], $whitelist)) {
+      $build['social_links']['#access'] = FALSE;
+    }
   }
 }
 
@@ -633,4 +677,19 @@ function theme_ombucleanup_site_logo($variables) {
       'class' => array('brand'),
     ),
   ));
+}
+
+/**
+ * Implements hook_facetapi_widgets().
+ */
+function ombucleanup_facetapi_widgets() {
+  return array(
+    'ombucleanup_dropdowns' => array(
+      'handler' => array(
+        'label' => t('Select Field (Dropdowns)'),
+        'class' => 'OmbucleanupFacetapiSelectDropdowns',
+        'query types' => array('term', 'date'),
+      ),
+    ),
+  );
 }
