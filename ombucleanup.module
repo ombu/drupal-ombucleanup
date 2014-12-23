@@ -374,6 +374,10 @@ function ombucleanup_wysiwyg_editor_settings_alter(&$settings, &$context) {
 
     // Allow all content in wysiwyg.
     $settings['allowedContent'] = TRUE;
+
+    // Use browser spell checking.
+    $settings['disableNativeSpellChecker'] = FALSE;
+    $settings['removePlugins'] = 'contextmenu';
   }
 }
 
