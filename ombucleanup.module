@@ -704,7 +704,7 @@ function ombucleanup_facetapi_widgets() {
 }
 
 /**
- * Implements hook_element_ifo_alter().
+ * Implements hook_element_info_alter().
  */
 function ombucleanup_element_info_alter(&$type) {
   if (isset($type['textfield'])) {
