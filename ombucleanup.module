@@ -576,6 +576,25 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
     if ($content['#theme'] == 'image_formatter') {
       $content['#item']['attributes'] = $content['#attributes'];
     }
+
+    // Wrap content in figure/figcaption.
+    $element['content']['#prefix'] = '<figure>';
+    $element['content']['#suffix'] = '</figure>';
+
+    // Group all set fields into figcaption element.
+    $captions = array();
+    foreach ($settings['fields'] as $field => $field_info) {
+      if (isset($element['content'][$field])) {
+        $captions[$field] = $element['content'][$field];
+        $element['content'][$field]['#access'] = FALSE;
+      }
+    }
+    if ($captions) {
+      $element['content']['captions'] = $captions + array(
+        '#prefix' => '<figcaption>',
+        '#suffix' => '</figcaption>',
+      );
+    }
   }
 }
 
