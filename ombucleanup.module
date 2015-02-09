@@ -374,6 +374,10 @@ function ombucleanup_wysiwyg_editor_settings_alter(&$settings, &$context) {
 
     // Allow all content in wysiwyg.
     $settings['allowedContent'] = TRUE;
+
+    // Use browser spell checking.
+    $settings['disableNativeSpellChecker'] = FALSE;
+    $settings['removePlugins'] = 'contextmenu';
   }
 }
 
@@ -514,6 +518,11 @@ function ombucleanup_module_implements_alter(&$implementations, $hook) {
     unset($implementations['jquery_update']);
     $implementations['jquery_update'] = $jquery_update;
   }
+  elseif (in_array($hook, array('element_info_alter'))) {
+    $group = $implementations['ombucleanup'];
+    unset($implementations['ombucleanup']);
+    $implementations['ombucleanup'] = $group;
+  }
 }
 
 /**
@@ -566,6 +575,25 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
 
     if ($content['#theme'] == 'image_formatter') {
       $content['#item']['attributes'] = $content['#attributes'];
+    }
+
+    // Wrap content in figure/figcaption.
+    $element['content']['#prefix'] = '<figure>';
+    $element['content']['#suffix'] = '</figure>';
+
+    // Group all set fields into figcaption element.
+    $captions = array();
+    foreach ($settings['fields'] as $field => $field_info) {
+      if (isset($element['content'][$field])) {
+        $captions[$field] = $element['content'][$field];
+        $element['content'][$field]['#access'] = FALSE;
+      }
+    }
+    if ($captions) {
+      $element['content']['captions'] = $captions + array(
+        '#prefix' => '<figcaption>',
+        '#suffix' => '</figcaption>',
+      );
     }
   }
 }
@@ -693,3 +721,31 @@ function ombucleanup_facetapi_widgets() {
     ),
   );
 }
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function ombucleanup_element_info_alter(&$type) {
+  if (isset($type['textfield'])) {
+    $type['textfield']['#process'][] = 'ombucleanup_process_textfield';
+  }
+}
+
+/**
+ * Preprocess function for textfields.
+ */
+function ombucleanup_process_textfield($element, &$form_state) {
+  // Restrict select2 functionality for autocomplete textfields to one element,
+  // since Drupal handles multiple widget functionality.
+  if (isset($element['#field_name']) && $element['#field_name']) {
+    $field_info = field_info_field($element['#field_name']);
+  }
+
+  if (!empty($element['#select2']) && isset($field_info) && $field_info['type'] != 'taxonomy_term_reference') {
+    $element['#select2']['multiple'] = FALSE;
+    _select2_set_element_settings($element['#id'], $element['#select2']);
+  }
+
+  return $element;
+}
+
