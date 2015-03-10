@@ -75,6 +75,10 @@ function ombucleanup_menu_alter(&$items) {
  */
 function ombucleanup_theme() {
   return array(
+    'ombucleanup_title_block' => array(
+      'variables' => array('title' => NULL, 'node' => NULL),
+      'template' => 'ombucleanup-title-block',
+    ),
     'ombucleanup_site_logo' => array(
       'variables' => array('site_name' => NULL),
     ),
@@ -137,11 +141,13 @@ function ombucleanup_block_view($delta = '') {
       // Hide the title on the front page.
       // @todo: make this a setting, or at least more configurable.
       if (!drupal_is_front_page() && !variable_get('ombucleanup_hide_title', FALSE)) {
+        $node = menu_get_object();
+
         $block['content'] = array(
           'title' => array(
-            '#markup' => drupal_get_title(),
-            '#prefix' => '<h1>',
-            '#suffix' => '</h1>',
+            '#theme' => 'ombucleanup_title_block',
+            '#title' => drupal_get_title(),
+            '#node' => $node,
           ),
         );
       }
@@ -171,6 +177,17 @@ function ombucleanup_block_view_system_main_alter(&$build, $block) {
     // Ensure that node links appear first.
     $build['content']['#contextual_links'] = array('node' => array('node', array($node->nid))) + $build['content']['#contextual_links'];
   }
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function ombucleanup_entity_info_alter(&$info) {
+  // Add a new node view mode so nodes can push fields to title region.
+  $info['node']['view modes']['title_block'] = array(
+    'label' => t('Title block'),
+    'custom settings' => TRUE,
+  );
 }
 
 /**
@@ -749,3 +766,21 @@ function ombucleanup_process_textfield($element, &$form_state) {
   return $element;
 }
 
+/**
+ * Implements hook_preprocess_ombucleanup_title_block().
+ */
+function ombucleanup_preprocess_ombucleanup_title_block(&$variables) {
+  if ($variables['node']) {
+    $node = $variables['node'];
+
+    // Add template suggestions for node type.
+    $variables['theme_hook_suggestions'][] = 'ombucleanup_title_block__' . $node->type;
+
+    // Build content directly instead of running through node_view() so the
+    // cruft of node.tpl.php isn't included in page title block.
+    $langcode = $GLOBALS['language_content']->language;
+    node_build_content($node, 'title_block', $langcode);
+    $variables['content'] = $node->content;
+    unset($node->content);
+  }
+}
