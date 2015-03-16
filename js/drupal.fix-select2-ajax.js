@@ -6,7 +6,11 @@
       // There should be no harm in processing all elements again, since select2
       // applies .once() to processed select elements, preventing them from
       // being processed a second time.
-      _select2_process_elements();
+      try {
+        _select2_process_elements();
+      }
+      catch(e) {
+      }
     }
   };
 
