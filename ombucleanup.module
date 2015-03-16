@@ -141,7 +141,13 @@ function ombucleanup_block_view($delta = '') {
       // Hide the title on the front page.
       // @todo: make this a setting, or at least more configurable.
       if (!drupal_is_front_page() && !variable_get('ombucleanup_hide_title', FALSE)) {
+        // Load proper node state (draft if using workbench moderation).
         $node = menu_get_object();
+        if (module_exists('workbench_moderation')) {
+          if (arg(2) == 'draft') {
+            $node = workbench_moderation_node_current_load($node);
+          }
+        }
 
         $block['content'] = array(
           'title' => array(
@@ -781,6 +787,5 @@ function ombucleanup_preprocess_ombucleanup_title_block(&$variables) {
     $langcode = $GLOBALS['language_content']->language;
     node_build_content($node, 'title_block', $langcode);
     $variables['content'] = $node->content;
-    unset($node->content);
   }
 }
