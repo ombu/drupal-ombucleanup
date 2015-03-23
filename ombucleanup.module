@@ -787,6 +787,7 @@ function ombucleanup_preprocess_ombucleanup_title_block(&$variables) {
     // cruft of node.tpl.php isn't included in page title block.
     $langcode = $GLOBALS['language_content']->language;
     node_build_content($node, 'title_block', $langcode);
+    unset($node->content['links']);
     $variables['content'] = $node->content;
     unset($node->content);
   }
