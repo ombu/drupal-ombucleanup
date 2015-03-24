@@ -112,8 +112,14 @@ function ombucleanup_block_info() {
     'info' => t('Page Title'),
     'cache' => DRUPAL_CACHE_PER_PAGE,
   );
+  // Regular breadcrumb menu hierarchy (default Drupal).
   $blocks['breadcrumb'] = array(
     'info' => t('Breadcrumb'),
+    'cache' => DRUPAL_CACHE_PER_PAGE,
+  );
+  // Enhanced breadcrumb showing page siblings.
+  $blocks['super_breadcrumb'] = array(
+    'info' => t('Super Breadcrumb'),
     'cache' => DRUPAL_CACHE_PER_PAGE,
   );
   return $blocks;
@@ -161,17 +167,98 @@ function ombucleanup_block_view($delta = '') {
 
     case 'breadcrumb':
       $block['subject'] = '';
-      $block['content'] = '';
-      if ($breadcrumb = drupal_get_breadcrumb()) {
-        $block['content'] = array(
-          'breadcrumb' => array(
-            '#markup' => theme('breadcrumb', array('breadcrumb' => drupal_get_breadcrumb())),
-          ),
-        );
-      }
+      $block['content'] = ombucleanup_breadcrumb_block();
+      break;
+
+    case 'super_breadcrumb':
+      $siblings = ombucleanup_breadcrumb_siblings();
+      $breadcrumb = ombucleanup_breadcrumb_block();
+
+      $block['subject'] = '';
+      $block['content'] = array(
+        'breadcrumb' => $breadcrumb,
+        'siblings' => $siblings,
+      );
       break;
   }
   return $block;
+}
+
+/**
+ * Returns breadcrumbs for breadcrumb block.
+ */
+function ombucleanup_breadcrumb_block() {
+  $content = '';
+
+  if ($breadcrumb = drupal_get_breadcrumb()) {
+    $content = array(
+      '#markup' => theme('breadcrumb', array('breadcrumb' => drupal_get_breadcrumb())),
+    );
+  }
+
+  return $content;
+}
+
+/**
+ * Returns menu siblings for super breadcrumb block.
+ */
+function ombucleanup_breadcrumb_siblings() {
+  global $conf;
+
+  $content = array();
+
+  $active_item = menu_link_get_preferred(current_path());
+
+  // First attempt to show children.
+  $parameters = array(
+    'active_trail' => array($active_item['plid']),
+    'only_active_trail' => FALSE,
+    'min_depth' => $active_item['depth'] + 1,
+    'max_depth' => $active_item['depth'] + 1,
+    'conditions' => array('plid' => $active_item['mlid']),
+  );
+  $tree = menu_build_tree($active_item['menu_name'], $parameters);
+
+  // If there's no children, show siblings and hide title from breadcrumb.
+  if (!$tree) {
+    $conf['breadcrumb_show_page_title'] = FALSE;
+
+    $parameters = array(
+      'only_active_trail' => FALSE,
+      'min_depth' => $active_item['depth'],
+      'max_depth' => $active_item['depth'],
+      'conditions' => array('plid' => $active_item['plid']),
+    );
+    $tree = menu_build_tree($active_item['menu_name'], $parameters);
+  }
+
+  if ($tree) {
+    $content['menu_tree'] = menu_tree_output($tree);
+
+    // Build select menu for mobile.
+    $options = array('' => t('- Menu - '));
+    $default_value = '';
+    foreach ($tree as $item) {
+      $url = url($item['link']['link_path']);
+      $options[$url] = $item['link']['link_title'];
+
+      if ($item['link']['link_path'] == current_path()) {
+        $default_value = $url;
+      }
+    }
+    $content['menu_select'] = array(
+      '#type' => 'select',
+      '#name' => 'select',
+      '#options' => $options,
+      '#value' => $default_value,
+      '#attributes' => array(
+        'class' => array('select-menu', 'visible-xs'),
+        'onChange' => 'window.location.replace(this.options[this.selectedIndex].value);',
+      ),
+    );
+  }
+
+  return $content;
 }
 
 /**
