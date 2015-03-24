@@ -175,10 +175,13 @@ function ombucleanup_block_view($delta = '') {
       $breadcrumb = ombucleanup_breadcrumb_block();
 
       $block['subject'] = '';
-      $block['content'] = array(
-        'breadcrumb' => $breadcrumb,
-        'siblings' => $siblings,
-      );
+      $block['content'] = '';
+      if ($siblings || $breadcrumb) {
+        $block['content'] = array(
+          'breadcrumb' => $breadcrumb,
+          'siblings' => $siblings,
+        );
+      }
       break;
   }
   return $block;
@@ -208,6 +211,10 @@ function ombucleanup_breadcrumb_siblings() {
   $content = array();
 
   $active_item = menu_link_get_preferred(current_path());
+  // Don't show siblings for navigation menu.
+  if ($active_item['menu_name'] == 'navigation') {
+    return $content;
+  }
 
   // First attempt to show children.
   $parameters = array(
