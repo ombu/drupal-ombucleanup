@@ -76,7 +76,7 @@ function ombucleanup_menu_alter(&$items) {
 function ombucleanup_theme() {
   return array(
     'ombucleanup_title_block' => array(
-      'variables' => array('title' => NULL, 'node' => NULL),
+      'variables' => array('title' => NULL, 'node' => NULL, 'subtitle' => NULL),
       'template' => 'ombucleanup-title-block',
     ),
     'ombucleanup_site_logo' => array(
@@ -160,6 +160,7 @@ function ombucleanup_block_view($delta = '') {
             '#theme' => 'ombucleanup_title_block',
             '#title' => drupal_get_title(),
             '#node' => $node,
+            '#subtitle' => ombucleanup_page_title_subtitle(),
           ),
         );
       }
@@ -266,6 +267,19 @@ function ombucleanup_breadcrumb_siblings() {
   }
 
   return $content;
+}
+
+/**
+ * Helper function to store subtitle data from page callbacks.
+ */
+function ombucleanup_page_title_subtitle($content = NULL) {
+  $subtitle = &drupal_static(__FUNCTION__);
+
+  if ($content) {
+    $subtitle = $content;
+  }
+
+  return $subtitle;
 }
 
 /**

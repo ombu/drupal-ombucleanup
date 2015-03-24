@@ -16,6 +16,10 @@
 
 <h1><?php print $title ?></h1>
 
-<?php if ($node || $show_content): ?>
+<?php if ($subtitle): ?>
+  <h2><?php print $subtitle ?></h2>
+<?php endif ?>
+
+<?php if ($node): ?>
   <?php print render($content) ?>
 <?php endif ?>
