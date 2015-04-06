@@ -399,6 +399,16 @@ function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
+ * Implements hook_field_attach_form().
+ */
+function ombucleanup_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+  // Remove redirect options for file entities.
+  if ($entity_type == 'file' && isset($form['redirect'])) {
+    $form['redirect']['#access'] = FALSE;
+  }
+}
+
+/**
  * Implements hook_wysiwyg_editor_settings_alter().
  */
 function ombucleanup_wysiwyg_editor_settings_alter(&$settings, &$context) {
@@ -556,6 +566,11 @@ function ombucleanup_module_implements_alter(&$implementations, $hook) {
     $implementations['jquery_update'] = $jquery_update;
   }
   elseif (in_array($hook, array('element_info_alter'))) {
+    $group = $implementations['ombucleanup'];
+    unset($implementations['ombucleanup']);
+    $implementations['ombucleanup'] = $group;
+  }
+  elseif (in_array($hook, array('field_attach_form'))) {
     $group = $implementations['ombucleanup'];
     unset($implementations['ombucleanup']);
     $implementations['ombucleanup'] = $group;
