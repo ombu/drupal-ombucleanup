@@ -271,7 +271,7 @@ function ombucleanup_image_scale_and_crop_effect(&$image, $data) {
   $width = $image_width * $ratio;
   $height = $image_height * $ratio;
 
-  if (image_resize($image, $width, $height)) {
+  if (image_scale($image, $width, $height, FALSE)) {
     list($x, $y) = explode('-', $data['anchor']);
     $x = image_filter_keyword($x, $image->info['width'], $data['width']);
     $y = image_filter_keyword($y, $image->info['height'], $data['height']);
