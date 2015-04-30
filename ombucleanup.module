@@ -371,6 +371,27 @@ function ombucleanup_form_media_internet_add_alter(&$form, $form_state) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ombucleanup_form_media_format_form_alter(&$form, &$form_state) {
+  if (isset($form['#media'])) {
+    // The media filter doesn't copy over all the $form_state info needed for
+    // the fields when it copies the fields to the media_format_form which can
+    // cause the wrong element process function to be called.  This fixes the
+    // date popup functionality on date fields.
+    $file = $form['#media'];
+    // Re-generate the form_state for the file.
+    $file_form = array();
+    $file_form_state = array();
+    field_attach_form('file', $file, $file_form, $file_form_state);
+    if (isset($file_form_state['field'])) {
+      // Re-assign the `field` attribute to the media_format_form form_state.
+      $form_state['field'] = $file_form_state['field'];
+    }
+  }
+}
+
+/**
  * Implements hook_form_alter().
  */
 function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
