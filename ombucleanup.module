@@ -445,6 +445,8 @@ function ombucleanup_htmlpurifier_html_definition_alter($html_definition) {
   $html_definition->addAttribute('iframe', 'src', 'URI');
   $html_definition->addAttribute('iframe', 'width', 'Number');
   $html_definition->addAttribute('iframe', 'height', 'Number');
+
+  HTMLPurifier_URISchemeRegistry::instance()->register('tel', new OMBU_HTMLPurifier_URIScheme_tel());
 }
 
 /**
