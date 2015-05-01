@@ -398,3 +398,26 @@ function ombucleanup_menu_breadcrumb_alter(&$active_trail, $item) {
     }
   }
 }
+
+/**
+ * Implements hook_htmlpurifier_html_definition_alter().
+ *
+ * Add additional supported elements to html purfier.
+ *
+ * @see http://htmlpurifier.org/docs/enduser-customize.html
+ */
+function ombucleanup_htmlpurifier_html_definition_alter($html_definition) {
+  $html_definition->addElement(
+    'iframe',
+    'Block',
+    'Flow',
+    'Common',
+    array(
+      'src' => 'URI',
+      'width' => 'Number',
+      'height' => 'Number',
+    ));
+  $html_definition->addAttribute('iframe', 'src', 'URI');
+  $html_definition->addAttribute('iframe', 'width', 'Number');
+  $html_definition->addAttribute('iframe', 'height', 'Number');
+}
