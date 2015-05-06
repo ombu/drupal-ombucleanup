@@ -82,6 +82,9 @@ function ombucleanup_theme() {
     'ombucleanup_site_logo' => array(
       'variables' => array('site_name' => NULL),
     ),
+    'ombucleanup_datefield' => array(
+      'render element' => 'element',
+    ),
   );
 }
 
@@ -316,6 +319,70 @@ function ombucleanup_image_scale_and_crop_effect(&$image, $data) {
     return image_crop($image, $x, $y, $data['width'], $data['height']);
   }
   return FALSE;
+}
+
+/**
+ * Implements hook_element_info().
+ */
+function ombucleanup_element_info() {
+  $info['datefield'] = array(
+    '#input' => TRUE,
+    '#size' => 10,
+    '#step' => 1,
+    '#maxlength' => 128,
+    '#autocomplete_path' => FALSE,
+    '#process' => array('ajax_process_form'),
+    '#element_validate' => array('ombucleanup_form_validate_datefield'),
+    '#theme' => 'ombucleanup_datefield',
+    '#theme_wrappers' => array('form_element'),
+  );
+
+  return $info;
+}
+
+/**
+ * Form element validation handler for #type 'datefield'.
+ *
+ * Note that #required is validated by _form_validate() already.
+ */
+function ombucleanup_form_validate_datefield(&$element, &$form_state) {
+  $value = $element['#value'];
+  if (empty($value)) {
+    return;
+  }
+
+  // Ensure the input is a date.
+  $date = DateTime::createFromFormat('Y-m-d', $value);
+  if (empty($date)) {
+    form_error($element, t('%name must be a date.', array('%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'])));
+  }
+
+  // Ensure that the input is greater than the #min property, if set.
+  if (isset($element['#min']) && $min = DateTime::createFromFormat('Y-m-d', $element['#min'])) {
+    if ($date->getTimestamp() < $min->getTimestamp()) {
+      form_error($element, t('%name must be later than %min.', array('%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'], '%min' => $element['#min'])));
+    }
+  }
+
+  // Ensure that the input is less than the #max property, if set.
+  if (isset($element['#max']) && $max = DateTime::createFromFormat('Y-m-d', $element['#max'])) {
+    if ($date->getTimestamp() > $max->getTimestamp()) {
+      form_error($element, t('%name must be earlier than %max.', array('%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'], '%max' => $element['#max'])));
+    }
+  }
+}
+
+/**
+ * Theme callback for datefield.
+ */
+function theme_ombucleanup_datefield($variables) {
+  $element = $variables['element'];
+  $element['#attributes']['type'] = 'date';
+  element_set_attributes($element, array('id', 'name', 'value', 'size', 'maxlength', 'placeholder', 'min', 'max', 'step'));
+  _form_set_class($element, array('form-text', 'form-date'));
+
+  $output = '<input' . drupal_attributes($element['#attributes']) . ' />';
+  return $output;
 }
 
 /**
