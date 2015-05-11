@@ -28,3 +28,6 @@ ul.media-list-thumbnails .media-thumbnail {
 .link-field-column:first-child {
   padding-right: 10px;
 }
+table.sticky-header {
+  z-index: 5;
+}
