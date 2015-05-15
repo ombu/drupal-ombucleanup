@@ -49,7 +49,7 @@ function ombucleanup_menu_alter(&$items) {
   unset($items['user/%user/track/navigation']);
 
   // Hide user list/permissions tabs on user create screen.
-  $items['admin/people/create']['type'] = MENU_NORMAL_ITEM;
+  $items['admin/people/permissions']['type'] = MENU_NORMAL_ITEM;
 
   // Hide taxonomy menu tabs for all users except uid 1.
   $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name/edit']['access callback'] = 'ombucleanup_taxonomy_access';
@@ -63,7 +63,7 @@ function ombucleanup_menu_alter(&$items) {
 
   // Remove personal contact forms.
   if (module_exists('contact')) {
-    $items['user/%user/contact']['access callback'] = FALSE;
+    //$items['user/%user/contact']['access callback'] = FALSE;
   }
 
   // Disable view screen for beans.
@@ -291,7 +291,7 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
   }
 
   // Hide preview button.
-  $form['actions']['preview']['#access'] = FALSE;
+  //$form['actions']['preview']['#access'] = FALSE;
 
   // Block Revisions, "Promote to front page" and "sticky" options.
   $form['revision_information']['#access'] = FALSE;
