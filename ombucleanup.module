@@ -294,7 +294,7 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
   //$form['actions']['preview']['#access'] = FALSE;
 
   // Block Revisions, "Promote to front page" and "sticky" options.
-  $form['revision_information']['#access'] = FALSE;
+  //$form['revision_information']['#access'] = FALSE;
   $form['options']['promote']['#access'] = FALSE;
   $form['options']['sticky']['#access'] = FALSE;
 
@@ -472,7 +472,7 @@ function ombucleanup_form_bean_form_alter(&$form, $form_state) {
   }
 
   // Hide revision info.
-  $form['revision']['#access'] = FALSE;
+  //$form['revision']['#access'] = FALSE;
 
   // Hide redirects, if module exists.
   if (module_exists('redirect')) {
