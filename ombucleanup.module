@@ -736,6 +736,11 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
       );
     }
   }
+  elseif ($element['content']['#bundle'] == 'video') {
+    // Add video wrappers to videos within RTEs.
+    $element['content']['#prefix'] = '<div class="video-container"><div class="video-frame">';
+    $element['content']['#suffix'] = '</div></div>';
+  }
 }
 
 /**
