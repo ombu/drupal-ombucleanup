@@ -61,6 +61,9 @@ function ombucleanup_menu_alter(&$items) {
     unset($items['admin/structure/block/manage/%/%/configure']);
   }
 
+  // Remove node delete from contextual links.
+  unset($items['node/%node/delete']['context']);
+
   // Remove personal contact forms.
   if (module_exists('contact')) {
     $items['user/%user/contact']['access callback'] = FALSE;
