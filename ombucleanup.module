@@ -902,3 +902,20 @@ function ombucleanup_preprocess_ombucleanup_title_block(&$variables) {
     unset($node->content);
   }
 }
+
+/**
+ * Implements hook_apachesolr_entity_info_alter().
+ */
+function ombucleanup_apachesolr_entity_info_alter(&$entity_info) {
+  $entity_info['node']['status callback'][] = 'ombucleanup_apachesolr_404_exclude';
+}
+
+/**
+ * Status callback for apachesolr to exclude 404 node pages.
+ */
+function ombucleanup_apachesolr_404_exclude($entity_id, $type) {
+  if (variable_get('site_404', NULL) == 'node/' . $entity_id) {
+    return FALSE;
+  }
+  return TRUE;
+}
