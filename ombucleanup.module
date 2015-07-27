@@ -106,7 +106,8 @@ function ombucleanup_block_info() {
   );
   $blocks['page_title'] = array(
     'info' => t('Page Title'),
-    'cache' => DRUPAL_CACHE_PER_PAGE,
+    // @todo: switch to DRUPAL_CACHE_CUSTOM.
+    'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['breadcrumb'] = array(
     'info' => t('Breadcrumb'),
