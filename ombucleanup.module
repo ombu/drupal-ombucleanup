@@ -377,7 +377,10 @@ function ombucleanup_wysiwyg_editor_settings_alter(&$settings, &$context) {
 
     // Use browser spell checking.
     $settings['disableNativeSpellChecker'] = FALSE;
-    $settings['removePlugins'] = 'contextmenu';
+    // Only remove context menu if table button isn't enabled.
+    if (!in_array('Table', $settings['toolbar'][0])) {
+      $settings['removePlugins'] = 'contextmenu,tabletools';
+    }
   }
 }
 
