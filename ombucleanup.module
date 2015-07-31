@@ -750,6 +750,11 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
  * Implements hook_page_alter().
  */
 function ombucleanup_page_alter(&$page) {
+  // Remove title for homepage.
+  if (drupal_is_front_page() && variable_get('ombucleanup_hide_front_page_title', TRUE)) {
+    drupal_set_title('');
+  }
+
   // Add js to open links in new windows, only on the front end.
   if (variable_get('external_new_window', 1) && !path_is_admin(current_path())) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.external-links.js');
