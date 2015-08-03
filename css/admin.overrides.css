@@ -32,3 +32,6 @@ form#media-format-form #preview img {
 .link-field-column:first-child {
   padding-right: 10px;
 }
+table.sticky-header {
+  z-index: 5;
+}

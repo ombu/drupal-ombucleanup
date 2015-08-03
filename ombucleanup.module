@@ -116,7 +116,8 @@ function ombucleanup_block_info() {
   );
   $blocks['page_title'] = array(
     'info' => t('Page Title'),
-    'cache' => DRUPAL_CACHE_PER_PAGE,
+    // @todo: switch to DRUPAL_CACHE_CUSTOM.
+    'cache' => DRUPAL_NO_CACHE,
   );
   $blocks['breadcrumb'] = array(
     'info' => t('Breadcrumb'),
@@ -515,7 +516,10 @@ function ombucleanup_wysiwyg_editor_settings_alter(&$settings, &$context) {
 
     // Use browser spell checking.
     $settings['disableNativeSpellChecker'] = FALSE;
-    $settings['removePlugins'] = 'contextmenu';
+    // Only remove context menu if table button isn't enabled.
+    if (!in_array('Table', $settings['toolbar'][0])) {
+      $settings['removePlugins'] = 'contextmenu,tabletools';
+    }
   }
 }
 
@@ -583,6 +587,8 @@ function ombucleanup_htmlpurifier_html_definition_alter($html_definition) {
   $html_definition->addAttribute('iframe', 'src', 'URI');
   $html_definition->addAttribute('iframe', 'width', 'Number');
   $html_definition->addAttribute('iframe', 'height', 'Number');
+
+  HTMLPurifier_URISchemeRegistry::instance()->register('tel', new OMBU_HTMLPurifier_URIScheme_tel());
 }
 
 /**
@@ -624,23 +630,9 @@ function ombucleanup_form_bean_form_alter(&$form, $form_state) {
 function ombucleanup_entity_presave($entity, $type) {
   // For bean entities, generate a label.
   if ($type == 'bean') {
-    if ($entity->label == 'ombucleanup-tempkey') {
+    if ($entity->label == 'ombucleanup-tempkey' || empty($entity->label)) {
       // Default to use title as label, otherwise use bean type.
       $entity->label = $entity->title ? $entity->title : $entity->type;
-
-      // Create a truly unique delta for new beans. Bean::add() has the
-      // possibility of generating deltas that existed in beans that have been
-      // previously deleted. This causes problems, especially when a bean has
-      // been deleted but not removed from other systems (e.g. context), causing
-      // the bean to show up in unintended places.
-      $entity->delta = drupal_clean_css_identifier(strtolower($entity->label));
-
-      // Make sure it isn't too long for the database.
-      $max_length = 32;
-      $identifier = '-' . db_next_id();
-      $max_length -= strlen($identifier);
-      $entity->delta = substr($entity->delta, 0, $max_length);
-      $entity->delta .= $identifier;
     }
   }
 }
