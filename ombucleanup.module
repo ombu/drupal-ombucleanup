@@ -61,6 +61,9 @@ function ombucleanup_menu_alter(&$items) {
     unset($items['admin/structure/block/manage/%/%/configure']);
   }
 
+  // Remove node delete from contextual links.
+  unset($items['node/%node/delete']['context']);
+
   // Remove personal contact forms.
   if (module_exists('contact')) {
     $items['user/%user/contact']['access callback'] = FALSE;
@@ -68,6 +71,10 @@ function ombucleanup_menu_alter(&$items) {
 
   // Disable view screen for beans.
   $items['block/%bean_delta/view']['access callback'] = FALSE;
+
+  // Disable view screen for files.
+  $items['file/%file']['page callback'] = 'drupal_not_found';
+  $items['file/%file/view']['type'] = MENU_CALLBACK;
 }
 
 /**
@@ -75,8 +82,15 @@ function ombucleanup_menu_alter(&$items) {
  */
 function ombucleanup_theme() {
   return array(
+    'ombucleanup_title_block' => array(
+      'variables' => array('title' => NULL, 'node' => NULL, 'subtitle' => NULL),
+      'template' => 'ombucleanup-title-block',
+    ),
     'ombucleanup_site_logo' => array(
       'variables' => array('site_name' => NULL),
+    ),
+    'ombucleanup_datefield' => array(
+      'render element' => 'element',
     ),
   );
 }
@@ -138,11 +152,20 @@ function ombucleanup_block_view($delta = '') {
       // Hide the title on the front page.
       // @todo: make this a setting, or at least more configurable.
       if (!drupal_is_front_page() && !variable_get('ombucleanup_hide_title', FALSE)) {
+        // Load proper node state (draft if using workbench moderation).
+        $node = menu_get_object();
+        if (module_exists('workbench_moderation')) {
+          if (arg(2) == 'draft') {
+            $node = workbench_moderation_node_current_load($node);
+          }
+        }
+
         $block['content'] = array(
           'title' => array(
-            '#markup' => drupal_get_title(),
-            '#prefix' => '<h1>',
-            '#suffix' => '</h1>',
+            '#theme' => 'ombucleanup_title_block',
+            '#title' => drupal_get_title(),
+            '#node' => $node,
+            '#subtitle' => ombucleanup_page_title_subtitle(),
           ),
         );
       }
@@ -164,6 +187,19 @@ function ombucleanup_block_view($delta = '') {
 }
 
 /**
+ * Helper function to store subtitle data from page callbacks.
+ */
+function ombucleanup_page_title_subtitle($content = NULL) {
+  $subtitle = &drupal_static(__FUNCTION__);
+
+  if ($content) {
+    $subtitle = $content;
+  }
+
+  return $subtitle;
+}
+
+/**
  * Implements hook_block_view_MODULE_DELTA_alter().
  */
 function ombucleanup_block_view_system_main_alter(&$build, $block) {
@@ -172,6 +208,17 @@ function ombucleanup_block_view_system_main_alter(&$build, $block) {
     // Ensure that node links appear first.
     $build['content']['#contextual_links'] = array('node' => array('node', array($node->nid))) + $build['content']['#contextual_links'];
   }
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function ombucleanup_entity_info_alter(&$info) {
+  // Add a new node view mode so nodes can push fields to title region.
+  $info['node']['view modes']['title_block'] = array(
+    'label' => t('Title block'),
+    'custom settings' => TRUE,
+  );
 }
 
 /**
@@ -283,6 +330,70 @@ function ombucleanup_image_scale_and_crop_effect(&$image, $data) {
 }
 
 /**
+ * Implements hook_element_info().
+ */
+function ombucleanup_element_info() {
+  $info['datefield'] = array(
+    '#input' => TRUE,
+    '#size' => 10,
+    '#step' => 1,
+    '#maxlength' => 128,
+    '#autocomplete_path' => FALSE,
+    '#process' => array('ajax_process_form'),
+    '#element_validate' => array('ombucleanup_form_validate_datefield'),
+    '#theme' => 'ombucleanup_datefield',
+    '#theme_wrappers' => array('form_element'),
+  );
+
+  return $info;
+}
+
+/**
+ * Form element validation handler for #type 'datefield'.
+ *
+ * Note that #required is validated by _form_validate() already.
+ */
+function ombucleanup_form_validate_datefield(&$element, &$form_state) {
+  $value = $element['#value'];
+  if (empty($value)) {
+    return;
+  }
+
+  // Ensure the input is a date.
+  $date = DateTime::createFromFormat('Y-m-d', $value);
+  if (empty($date)) {
+    form_error($element, t('%name must be a date.', array('%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'])));
+  }
+
+  // Ensure that the input is greater than the #min property, if set.
+  if (isset($element['#min']) && $min = DateTime::createFromFormat('Y-m-d', $element['#min'])) {
+    if ($date->getTimestamp() < $min->getTimestamp()) {
+      form_error($element, t('%name must be later than %min.', array('%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'], '%min' => $element['#min'])));
+    }
+  }
+
+  // Ensure that the input is less than the #max property, if set.
+  if (isset($element['#max']) && $max = DateTime::createFromFormat('Y-m-d', $element['#max'])) {
+    if ($date->getTimestamp() > $max->getTimestamp()) {
+      form_error($element, t('%name must be earlier than %max.', array('%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'], '%max' => $element['#max'])));
+    }
+  }
+}
+
+/**
+ * Theme callback for datefield.
+ */
+function theme_ombucleanup_datefield($variables) {
+  $element = $variables['element'];
+  $element['#attributes']['type'] = 'date';
+  element_set_attributes($element, array('id', 'name', 'value', 'size', 'maxlength', 'placeholder', 'min', 'max', 'step'));
+  _form_set_class($element, array('form-text', 'form-date'));
+
+  $output = '<input' . drupal_attributes($element['#attributes']) . ' />';
+  return $output;
+}
+
+/**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function ombucleanup_form_node_form_alter(&$form, &$form_state) {
@@ -328,10 +439,31 @@ function ombucleanup_form_menu_edit_item_alter(&$form, $form_state) {
  *
  * Clean up media embed help text.
  */
-function ombucleanup_form_media_internet_add_alter(&$form, $form_state) {
-  $form['embed_code']['#title'] = variable_get('media_embed_help', 'Enter an image URL or a YouTube share link');
+function ombucleanup_form_ombumedia_internet_add_alter(&$form, $form_state) {
+  $form['embed_code']['#title'] = variable_get('ombumedia_embed_help', 'Enter an image URL or a YouTube share link');
   $form['embed_code']['#description'] = '';
   $form['providers']['#access'] = FALSE;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ombucleanup_form_media_format_form_alter(&$form, &$form_state) {
+  if (isset($form['#media'])) {
+    // The media filter doesn't copy over all the $form_state info needed for
+    // the fields when it copies the fields to the media_format_form which can
+    // cause the wrong element process function to be called.  This fixes the
+    // date popup functionality on date fields.
+    $file = $form['#media'];
+    // Re-generate the form_state for the file.
+    $file_form = array();
+    $file_form_state = array();
+    field_attach_form('file', $file, $file_form, $file_form_state);
+    if (isset($file_form_state['field'])) {
+      // Re-assign the `field` attribute to the media_format_form form_state.
+      $form_state['field'] = $file_form_state['field'];
+    }
+  }
 }
 
 /**
@@ -359,6 +491,16 @@ function ombucleanup_form_alter(&$form, &$form_state, $form_id) {
         $form['contact']['#access'] = FALSE;
       }
       break;
+  }
+}
+
+/**
+ * Implements hook_field_attach_form().
+ */
+function ombucleanup_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+  // Remove redirect options for file entities.
+  if ($entity_type == 'file' && isset($form['redirect'])) {
+    $form['redirect']['#access'] = FALSE;
   }
 }
 
@@ -515,6 +657,11 @@ function ombucleanup_module_implements_alter(&$implementations, $hook) {
     unset($implementations['ombucleanup']);
     $implementations['ombucleanup'] = $group;
   }
+  elseif (in_array($hook, array('field_attach_form'))) {
+    $group = $implementations['ombucleanup'];
+    unset($implementations['ombucleanup']);
+    $implementations['ombucleanup'] = $group;
+  }
 }
 
 /**
@@ -588,12 +735,22 @@ function ombucleanup_media_token_to_markup_alter(&$element, $tag_info, $settings
       );
     }
   }
+  elseif ($element['content']['#bundle'] == 'video') {
+    // Add video wrappers to videos within RTEs.
+    $element['content']['#prefix'] = '<div class="video-container"><div class="video-frame">';
+    $element['content']['#suffix'] = '</div></div>';
+  }
 }
 
 /**
  * Implements hook_page_alter().
  */
 function ombucleanup_page_alter(&$page) {
+  // Remove title for homepage.
+  if (drupal_is_front_page() && variable_get('ombucleanup_hide_front_page_title', TRUE)) {
+    drupal_set_title('');
+  }
+
   // Add js to open links in new windows, only on the front end.
   if (variable_get('external_new_window', 1) && !path_is_admin(current_path())) {
     drupal_add_js(drupal_get_path('module', 'ombucleanup') . '/js/drupal.external-links.js');
@@ -700,21 +857,6 @@ function theme_ombucleanup_site_logo($variables) {
 }
 
 /**
- * Implements hook_facetapi_widgets().
- */
-function ombucleanup_facetapi_widgets() {
-  return array(
-    'ombucleanup_dropdowns' => array(
-      'handler' => array(
-        'label' => t('Select Field (Dropdowns)'),
-        'class' => 'OmbucleanupFacetapiSelectDropdowns',
-        'query types' => array('term', 'date'),
-      ),
-    ),
-  );
-}
-
-/**
  * Implements hook_element_info_alter().
  */
 function ombucleanup_element_info_alter(&$type) {
@@ -741,3 +883,40 @@ function ombucleanup_process_textfield($element, &$form_state) {
   return $element;
 }
 
+/**
+ * Implements hook_preprocess_ombucleanup_title_block().
+ */
+function ombucleanup_preprocess_ombucleanup_title_block(&$variables) {
+  $variables['show_content'] = isset($variables['show_content']) ? $variables['show_content'] : FALSE;
+  if ($variables['node']) {
+    $node = $variables['node'];
+
+    // Add template suggestions for node type.
+    $variables['theme_hook_suggestions'][] = 'ombucleanup_title_block__' . $node->type;
+
+    // Build content directly instead of running through node_view() so the
+    // cruft of node.tpl.php isn't included in page title block.
+    $langcode = $GLOBALS['language_content']->language;
+    node_build_content($node, 'title_block', $langcode);
+    unset($node->content['links']);
+    $variables['content'] = $node->content;
+    unset($node->content);
+  }
+}
+
+/**
+ * Implements hook_apachesolr_entity_info_alter().
+ */
+function ombucleanup_apachesolr_entity_info_alter(&$entity_info) {
+  $entity_info['node']['status callback'][] = 'ombucleanup_apachesolr_404_exclude';
+}
+
+/**
+ * Status callback for apachesolr to exclude 404 node pages.
+ */
+function ombucleanup_apachesolr_404_exclude($entity_id, $type) {
+  if (variable_get('site_404', NULL) == 'node/' . $entity_id) {
+    return FALSE;
+  }
+  return TRUE;
+}
