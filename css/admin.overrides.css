@@ -25,6 +25,7 @@ ul.media-list-thumbnails .media-thumbnail {
   width: 100px;
   height: 115px;
 }
+form#file-entity-edit > div > img,
 form#media-format-form #preview img {
   max-width: 600px;
   max-height: 400px;
