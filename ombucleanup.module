@@ -73,8 +73,15 @@ function ombucleanup_menu_alter(&$items) {
   $items['block/%bean_delta/view']['access callback'] = FALSE;
 
   // Disable view screen for files.
-  $items['file/%file']['page callback'] = 'drupal_not_found';
+  $items['file/%file']['page callback'] = 'ombucleanup_page_not_found';
   $items['file/%file/view']['type'] = MENU_CALLBACK;
+}
+
+/**
+ * Page not found callback for file pages.
+ */
+function ombucleanup_page_not_found() {
+  return MENU_NOT_FOUND;
 }
 
 /**
