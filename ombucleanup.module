@@ -92,6 +92,9 @@ function ombucleanup_theme() {
     'ombucleanup_datefield' => array(
       'render element' => 'element',
     ),
+    'ombucleanup_emailfield' => array(
+      'render element' => 'element',
+    ),
   );
 }
 
@@ -344,6 +347,16 @@ function ombucleanup_element_info() {
     '#theme' => 'ombucleanup_datefield',
     '#theme_wrappers' => array('form_element'),
   );
+  $info['emailfield'] = array(
+    '#input' => TRUE,
+    '#size' => 10,
+    '#maxlength' => 128,
+    '#autocomplete_path' => FALSE,
+    '#process' => array('ajax_process_form'),
+    '#element_validate' => array('ombucleanup_form_validate_emailfield'),
+    '#theme' => 'ombucleanup_emailfield',
+    '#theme_wrappers' => array('form_element'),
+  );
 
   return $info;
 }
@@ -388,6 +401,35 @@ function theme_ombucleanup_datefield($variables) {
   $element['#attributes']['type'] = 'date';
   element_set_attributes($element, array('id', 'name', 'value', 'size', 'maxlength', 'placeholder', 'min', 'max', 'step'));
   _form_set_class($element, array('form-text', 'form-date'));
+
+  $output = '<input' . drupal_attributes($element['#attributes']) . ' />';
+  return $output;
+}
+
+/**
+ * Form element validation handler for #type 'emailfield'.
+ *
+ * Note that #required is validated by _form_validate() already.
+ */
+function ombucleanup_form_validate_emailfield(&$element, &$form_state) {
+  $value = $element['#value'];
+  if (empty($value)) {
+    return;
+  }
+
+  if (!valid_email_address($value)) {
+    form_error($element, t('%name must be a valid email address.', array('%name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'])));
+  }
+}
+
+/**
+ * Theme callback for emailfield.
+ */
+function theme_ombucleanup_emailfield($variables) {
+  $element = $variables['element'];
+  $element['#attributes']['type'] = 'email';
+  element_set_attributes($element, array('id', 'name', 'value', 'size', 'maxlength', 'placeholder'));
+  _form_set_class($element, array('form-text', 'form-email', 'form-control'));
 
   $output = '<input' . drupal_attributes($element['#attributes']) . ' />';
   return $output;
