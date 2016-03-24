@@ -459,7 +459,7 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
 
   // Show summary field by default. This can be done by changing the class that
   // the JS triggers the hide on.
-  if (variable_get('ombucleanup_show_summary__' . $form['type']['#value'], TRUE)) {
+  if (variable_get('ombucleanup_show_summary__' . $form['type']['#value'], TRUE) && isset($form['body'])) {
     $form['body'][$form['body']['#language']][0]['summary']['#attributes']['class'] = array('text-summary-no-links');
   }
 }
