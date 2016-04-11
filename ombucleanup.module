@@ -633,6 +633,22 @@ function ombucleanup_form_bean_form_alter(&$form, $form_state) {
   if (module_exists('redirect')) {
     $form['redirect']['#access'] = FALSE;
   }
+
+  // Add submit handler to redirect away from bean views.
+  $form['actions']['submit']['#submit'][] = 'ombucleanup_form_bean_form_submit';
+}
+
+/**
+ * Submit handler for bean forms.
+ *
+ * If destination isn't set, then redirect back to bean edit form, since bean
+ * view pages (the default redirect for bean forms) are hidden from view.
+ */
+function ombucleanup_form_bean_form_submit($form, &$form_state) {
+  $bean = $form_state['values']['bean'];
+  if ($form_state['redirect'] == $bean->viewURL()) {
+    $form_state['redirect'] = $bean->editURL();
+  }
 }
 
 /**
