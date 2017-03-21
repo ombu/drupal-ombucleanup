@@ -152,9 +152,17 @@ function ombucleanup_block_view($delta = '') {
     case 'page_title':
       $block['subject'] = '';
       $block['content'] = '';
-      // Hide the title on the front page.
-      // @todo: make this a setting, or at least more configurable.
-      if (!drupal_is_front_page() && !variable_get('ombucleanup_hide_title', FALSE)) {
+
+      $hide_title_block = FALSE;
+
+      // Check for homepage and if title block should be hidden.
+      if (drupal_is_front_page()) {
+        if (variable_get('ombucleanup_hide_homepage_titleblock', '')) {
+          $hide_title_block = TRUE;
+        }
+      }
+      
+      if (!$hide_title_block) {
         // Load proper node state (draft if using workbench moderation).
         $node = menu_get_object();
         if (module_exists('workbench_moderation')) {
@@ -827,6 +835,18 @@ function ombucleanup_siteconfig($op, $form) {
       '#type' => 'checkbox',
       '#default_value' => variable_get('external_new_window', 1),
       '#description' => 'If checked, all external links will automatically be opened in a new window.',
+    );
+    $form['baseinfo']['ombucleanup_hide_front_page_title'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Remove Homepage Title'),
+      '#description' => t('Should the html page title be removed from the homepage?'),
+      '#default_value' => variable_get('ombucleanup_hide_front_page_title', 1),
+    );
+    $form['baseinfo']['ombucleanup_hide_homepage_titleblock'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide Title Block on Homepage?'),
+      '#description' => t('If checked, title block will be hidden on the homepage.'),
+      '#default_value' => variable_get('ombucleanup_hide_homepage_titleblock', 1),
     );
 
     return $form;
