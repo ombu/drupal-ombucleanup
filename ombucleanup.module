@@ -130,6 +130,10 @@ function ombucleanup_block_info() {
     'info' => t('Breadcrumb'),
     'cache' => DRUPAL_CACHE_PER_PAGE,
   );
+  $blocks['copyright'] = array(
+    'info' => t('Copyright'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
   return $blocks;
 }
 
@@ -189,6 +193,17 @@ function ombucleanup_block_view($delta = '') {
         $block['content'] = array(
           'breadcrumb' => array(
             '#markup' => theme('breadcrumb', array('breadcrumb' => drupal_get_breadcrumb())),
+          ),
+        );
+      }
+      break;
+    case 'copyright':
+      $block['subject'] = '';
+      $block['content'] = '';
+      if ($copyright = variable_get('ombucleanup_copyright_attribution')) {
+        $block['content'] = array(
+          'copyright' => array(
+            '#markup' => '<p>' . t($copyright, array('%year' => date('Y'))) . '</p>',
           ),
         );
       }
@@ -847,6 +862,12 @@ function ombucleanup_siteconfig($op, $form) {
       '#title' => t('Hide Title Block on Homepage?'),
       '#description' => t('If checked, title block will be hidden on the homepage.'),
       '#default_value' => variable_get('ombucleanup_hide_homepage_titleblock', 1),
+    );
+    $form['baseinfo']['ombucleanup_copyright_attribution'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Copyright Attribution'),
+      '#description' => t('Text for the copyright statement on the site. Use %year to insert current year, and %copy to insert %copy-sign.', array('%year' => '%year', '%copy' => '&copy;', '%copy-sign' => '©')),
+      '#default_value' => variable_get('ombucleanup_copyright_attribution')
     );
 
     return $form;
