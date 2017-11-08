@@ -978,6 +978,10 @@ function ombucleanup_process_textfield($element, &$form_state) {
 function ombucleanup_preprocess_ombucleanup_title_block(&$variables) {
   $variables['show_content'] = isset($variables['show_content']) ? $variables['show_content'] : FALSE;
   if ($variables['node']) {
+
+    // Add node theme hook suggestion.
+    $variables['theme_hook_suggestions'][] = 'ombucleanup_title_block__node';
+
     $node = $variables['node'];
 
     // Add template suggestions for node type.
