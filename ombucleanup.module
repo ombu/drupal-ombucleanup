@@ -473,7 +473,8 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
   // Block Revisions, "Promote to front page" and "sticky" options.
   $form['revision_information']['#access'] = FALSE;
   $form['options']['promote']['#access'] = FALSE;
-  $form['options']['sticky']['#access'] = FALSE;
+  $form['options']['sticky']['#access'] = (variable_get('ombucleanup_hide_sticky')) ? FALSE : TRUE;
+  $form['options']['sticky']['#default_value'] = FALSE;
 
   // Don't check pathauto by default.
   if (!empty($form['nid']['#value'])) {
@@ -868,6 +869,12 @@ function ombucleanup_siteconfig($op, $form) {
       '#title' => t('Copyright Attribution'),
       '#description' => t('Text for the copyright statement on the site. Use %year to insert current year, and %copy to insert %copy-sign.', array('%year' => '%year', '%copy' => '&copy;', '%copy-sign' => '©')),
       '#default_value' => variable_get('ombucleanup_copyright_attribution')
+    );
+    $form['baseinfo']['ombucleanup_hide_sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide "Sticky at top of lists"'),
+      '#description' => t('Should sticky at top of lists be hidden from content authoring forms?'),
+      '#default_value' => variable_get('ombucleanup_hide_sticky', 1),
     );
 
     return $form;
