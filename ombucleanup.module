@@ -474,7 +474,7 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
   $form['revision_information']['#access'] = FALSE;
   $form['options']['promote']['#access'] = FALSE;
   $form['options']['sticky']['#access'] = (variable_get('ombucleanup_hide_sticky')) ? FALSE : TRUE;
-  $form['options']['sticky']['#default_value'] = FALSE;
+  $form['options']['sticky']['#default_value'] = (isset($form_state['node']->sticky) && $form_state['node']->sticky == '1') ? TRUE: FALSE;
 
   // Don't check pathauto by default.
   if (!empty($form['nid']['#value'])) {
