@@ -474,7 +474,17 @@ function ombucleanup_form_node_form_alter(&$form, &$form_state) {
   $form['revision_information']['#access'] = FALSE;
   $form['options']['promote']['#access'] = FALSE;
   $form['options']['sticky']['#access'] = (variable_get('ombucleanup_hide_sticky')) ? FALSE : TRUE;
-  $form['options']['sticky']['#default_value'] = (isset($form_state['node']->sticky) && $form_state['node']->sticky == '1') ? TRUE: FALSE;
+  // Check if this is a new node
+  $existing_node = FALSE;
+  if (isset($form['nid']['#value'])) {
+    $existing_node = TRUE;
+  }
+
+  if (!empty($existing_node)) {
+    $sticky_value = (isset($form_state['node']->sticky) && $form_state['node']->sticky == 1) ? TRUE : FALSE;
+  }
+
+  $form['options']['sticky']['#default_value'] = ($existing_node && $sticky_value) ? TRUE: FALSE;
 
   // Don't check pathauto by default.
   if (!empty($form['nid']['#value'])) {
