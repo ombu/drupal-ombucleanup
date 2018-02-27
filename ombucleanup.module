@@ -880,12 +880,6 @@ function ombucleanup_siteconfig($op, $form) {
       '#description' => t('Text for the copyright statement on the site. Use %year to insert current year, and %copy to insert %copy-sign.', array('%year' => '%year', '%copy' => '&copy;', '%copy-sign' => '©')),
       '#default_value' => variable_get('ombucleanup_copyright_attribution')
     );
-    $form['baseinfo']['ombucleanup_hide_sticky'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide "Sticky at top of lists"'),
-      '#description' => t('Should sticky at top of lists be hidden from content authoring forms?'),
-      '#default_value' => variable_get('ombucleanup_hide_sticky', 1),
-    );
 
     return $form;
   }
