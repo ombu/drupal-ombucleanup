@@ -711,15 +711,7 @@ function theme_ombucleanup_site_logo($variables) {
  * Implements hook_facetapi_widgets().
  */
 function ombucleanup_facetapi_widgets() {
-  return array(
-    'ombucleanup_dropdowns' => array(
-      'handler' => array(
-        'label' => t('Select Field (Dropdowns)'),
-        'class' => 'OmbucleanupFacetapiSelectDropdowns',
-        'query types' => array('term', 'date'),
-      ),
-    ),
-  );
+
 }
 
 /**
