@@ -15,30 +15,47 @@
       }
 
       // Build regular expressions that define an internal link.
-      var internal_link = new RegExp("^https?://" + subdomains + host, "i");
+      var internal_link_regex = new RegExp("^https?://" + subdomains + host, "i");
 
-      // Find all links which are NOT internal and begin with http as opposed
+      // Check if an <a> tag is NOT internal and begin with http as opposed
       // to ftp://, javascript:, etc. other kinds of links.
-      // When operating on the 'this' variable, the host has been appended to
-      // all links by the browser, even local ones.
-      var external_links = new Array();
-      $("a", context).each(function(el) {
+      // When operating on the 'el' variable's href attribute, the host has 
+      // been appended to all links by the browser, even local ones.
+      function isExternal(el) {
         try {
-          var url = $(this).attr('href').toLowerCase();
-          if (url.indexOf('http') == 0 && (!url.match(internal_link))) {
-              external_links.push(this);
+          var url = $(el).attr('href').toLowerCase();
+          if (url.indexOf('http') == 0 && (!url.match(internal_link_regex))) {
+            return true;
           }
         }
         // IE7 throws errors often when dealing with irregular links, such as:
         // <a href="node/1"></a> Empty tags.
         // <a href="http://user:pass@example.com">example</a> User:pass syntax.
-        catch (error) {
-          return false;
-        }
-      });
+        catch (error) {}
 
-      // Apply the target attribute to all links.
-      $(external_links).attr('target', '_blank');
+        return false;
+      }
+      
+      function hasTarget(el) {
+        try {
+          var target = $(el).attr('target');
+          console.log(target);
+          if (target == '_self' || target == '_parent' || target == '_top') {
+            return false;
+          }
+        }
+
+        catch (error) {}
+
+        return true;
+      }
+
+      $('a', context)
+        .filter(':not(.external-link-processed)')
+        .filter(function(i, el) { return isExternal(el); })
+        .filter(function(i, el) { return hasTarget(el); })
+        .attr('target', '_blank')
+        .addClass('external-link-processed');
     }
   };
 
